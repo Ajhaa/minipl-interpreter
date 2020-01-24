@@ -138,10 +138,11 @@ class Scanner
     return input[index + 1];
   }
 
+  // TODO fix skipping next char
   private void identOrKeyword()
   {
     int stringStart = index;
-    while (isLegalChar(input[index]))
+    while (index < input.Length && isLegalChar(input[index]))
     {
       index++;
     }

@@ -4,14 +4,24 @@ namespace minipl_interpreter
 {
   class Program
   {
-    static void Main(string[] args)
+    static int Main(string[] args)
     {
-      var tokens = new Scanner("var num : int := 2467;").Tokenize();
+      if (args.Length == 0)
+      {
+        Console.WriteLine("Please enter a minipl program as (string) argument");
+        return 1;
+      }
+
+      var tokens = new Scanner(args[0]).Tokenize();
+
       foreach (var token in tokens)
       {
         Console.Write(token + " ");
       }
 
+      Console.Write("\n");
+
+      return 0;
     }
   }
 }
