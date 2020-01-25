@@ -47,9 +47,6 @@ class Scanner
       case '*':
         addToken(new Token(STAR));
         return;
-      case '/':
-        addToken(new Token(SLASH));
-        return;
       case '<':
         addToken(new Token(LESS_THAN));
         return;
@@ -70,6 +67,21 @@ class Scanner
         return;
       case '(':
         addToken(new Token(LEFT_PAREN));
+        return;
+      // comment or slash
+      case '/':
+        var next = lookahead();
+        if (next == '/')
+        {
+          lineComment();
+          return;
+        }
+        if (next == '*')
+        {
+          multiLineComment();
+          return;
+        }
+        addToken(new Token(SLASH));
         return;
       // colon or assignment
       case ':':
@@ -200,5 +212,18 @@ class Scanner
     }
 
     addToken(new Token(INTEGER, input.Substring(numberStart, index - numberStart + 1)));
+  }
+
+  private void lineComment()
+  {
+    do
+    {
+      index++;
+    } while (input[index] != '\n');
+  }
+
+  private void multiLineComment()
+  {
+    throw new System.NotImplementedException();
   }
 }

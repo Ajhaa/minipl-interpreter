@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace minipl_interpreter
 {
@@ -8,11 +9,11 @@ namespace minipl_interpreter
     {
       if (args.Length == 0)
       {
-        Console.WriteLine("Please enter a minipl program as (string) argument");
+        Console.WriteLine("Please enter a minipl program path as argument");
         return 1;
       }
-
-      var tokens = new Scanner(args[0]).Tokenize();
+      var fileAsString = File.ReadAllText(args[0]);
+      var tokens = new Scanner(fileAsString).Tokenize();
 
       foreach (var token in tokens)
       {
