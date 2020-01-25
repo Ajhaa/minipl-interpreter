@@ -20,7 +20,6 @@ namespace minipl_interpreter
       }
 
       Console.Write("\n");
-
       return 0;
     }
   }

@@ -135,19 +135,22 @@ class Scanner
 
   private char lookahead()
   {
+    if (index + 1 >= input.Length)
+    {
+      return (char)3;
+    }
     return input[index + 1];
   }
 
-  // TODO fix skipping next char
   private void identOrKeyword()
   {
     int stringStart = index;
-    while (index < input.Length && isLegalChar(input[index]))
+    while (isLegalChar(lookahead()))
     {
       index++;
     }
 
-    var result = input.Substring(stringStart, index - stringStart);
+    var result = input.Substring(stringStart, index - stringStart + 1);
     if (Keywords.isKeyword(result))
     {
       addToken(new Token(KEYWORD, result));
@@ -180,15 +183,22 @@ class Scanner
   private void makeInteger()
   {
     int numberStart = index;
-    while (isNumber(input[index]))
+
+    while (true)
     {
-      if (index >= input.Length)
+      var next = lookahead();
+      if (isLetter(next))
       {
-        throw new System.Exception("UNTERMINATED STRING");
+        throw new System.Exception("Unexpected char while parsing integer literal");
+      }
+
+      if (!isNumber(next))
+      {
+        break;
       }
       index++;
     }
 
-    addToken(new Token(INTEGER, input.Substring(numberStart, index - numberStart)));
+    addToken(new Token(INTEGER, input.Substring(numberStart, index - numberStart + 1)));
   }
 }
