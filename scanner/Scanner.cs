@@ -38,12 +38,6 @@ class Scanner
       case ';':
         addToken(new Token(SEMICOLON));
         return;
-      case '+':
-        addToken(new Token(PLUS));
-        return;
-      case '-':
-        addToken(new Token(MINUS));
-        return;
       case '*':
         addToken(new Token(STAR));
         return;
@@ -67,6 +61,23 @@ class Scanner
         return;
       case '(':
         addToken(new Token(LEFT_PAREN));
+        return;
+      // arithmetic or a signed number
+      case '+':
+        if (isNumber(lookahead()))
+        {
+          makeInteger();
+          return;
+        }
+        addToken(new Token(PLUS));
+        return;
+      case '-':
+        if (isNumber(lookahead()))
+        {
+          makeInteger();
+          return;
+        }
+        addToken(new Token(MINUS));
         return;
       // comment or slash
       case '/':
@@ -190,7 +201,6 @@ class Scanner
     addToken(new Token(STRING, input.Substring(stringStart, index - stringStart)));
   }
 
-  // TODO reject if chars before or after number without space 
   // TODO handle sign
   private void makeInteger()
   {

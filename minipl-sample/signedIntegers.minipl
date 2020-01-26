@@ -1,0 +1,8 @@
+var pos1 := 100;
+var pos2 := +100;
+var neg1 := -100;
+var neg2 := 0 - 100;
+
+assert (pos1 + pos2 = 200)
+assert (pos1 + neg1 = 0)
+assert (neg2 - pos2 = -200)

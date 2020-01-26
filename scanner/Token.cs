@@ -21,6 +21,7 @@ class Token
 
   public override string ToString()
   {
-    return string.Format("<{0}, {1}>", Type, Value);
+    if (Value == "") return string.Format("<{0}>", Type);
+    return string.Format("<{0}>", string.Join(" ", Type, Value));
   }
 }
