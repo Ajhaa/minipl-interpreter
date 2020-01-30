@@ -16,7 +16,7 @@ class Expression : Symbol {
   }
 
   public override string ToString() {
-    return string.Format("{0} {1} {2}", First, Operator, Second);
+    return string.Format("(expr {1} {0} {2})", First, Operator, Second);
   }
 }
 
@@ -29,5 +29,9 @@ class Operand : Symbol {
 
   public string GetName() {
     return "OPERAND";
+  }
+
+  public override string ToString() {
+    return string.Format("(opnd {0})", Value.ToString());
   }
 }

@@ -15,33 +15,42 @@ class Parser {
 
   public List<Statement> Parse() {
     while (index < tokens.Count) {
-      check(tokens[index]);
+      // foreach (Symbol s in stack) {
+      //   Console.Write(s + " ");
+      // }
+      // Console.Write("\n");
+     // Console.WriteLine("Current: " + tokens[index]);
+      stackAdd(tokens[index]);
     }
     return program;
   }
 
-  private void check(Symbol next) {
-    switch (next.GetName()) {
+
+  private void stackAdd(Symbol s) {
+    switch (s.GetName()) {
       case "OPERAND":
         if (stack.Count > 0) {
-          expr(next);
-          index++;
+          expr(s);
           return;
         }
 
-        shift(next);
+        shift(s);
         return;
 
       case "INTEGER":
-        check(new Operand(next));
+        stackAdd(new Operand(s));
         return;
 
       case "STRING":
-        check(new Operand(next));
+        stackAdd(new Operand(s));
         return;
 
+      case "RIGHT_PAREN":
+        parens();
+        return;
+        
       default:
-        shift(next);
+        shift(s);
         return;
     }
   }
@@ -51,19 +60,36 @@ class Parser {
     index++;
   }
 
-  private void reduce() {
-
-  }
-
   private void expr(Symbol next) {
     var second = (Operand) next;
     var op = (Token) stack.Pop();
+    if (!isOperator(op)) {
+      stack.Push(op);
+      shift(next);
+      return;
+    }
     Operand first = null;
     if (stack.Count > 0) {
       first = (Operand) stack.Pop();
     }
 
-    stack.Push(new Expression(first, op, second)); 
+    stackAdd(new Expression(first, op, second)); 
     Console.WriteLine("RESULT: " + stack.Peek());
+  }
+
+  private void parens() {
+    var expression = (Expression) stack.Pop();
+    Console.WriteLine(expression);
+    var matchingParen = (Token) stack.Pop();
+    if (matchingParen.Type != LEFT_PAREN) {
+      throw new Exception("Unmatched right paren");
+    }
+
+    stackAdd(new Operand(expression));
+  }
+
+  private bool isOperator(Token t) {
+    var type = t.Type;
+    return type == PLUS || type == MINUS || type == STAR || type == SLASH;
   }
 }
