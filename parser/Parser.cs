@@ -12,7 +12,6 @@ class Parser {
 
   private int index = 0;
 
-
   public List<Statement> Parse() {
     while (index < tokens.Count) {
       foreach (Symbol s in stack) {
@@ -71,12 +70,12 @@ class Parser {
         stack.Push(new Expression(null, null, (Operand) next));
         statement();
         return;
+
       case "EXPRESSION":
         if (stack.Peek().GetName() == "ASSIGN") {
           assignment(next);
         } else {
-          //printStatement();
-          throw new System.NotImplementedException("No print yet, sorry!");
+          printStatement(next);
         }
         break;
       default:
@@ -113,6 +112,11 @@ class Parser {
     private void shift(Symbol next) {
     stack.Push(next);
     index++;
+  }
+
+  private void printStatement(Symbol next) {
+    stack.Pop();
+    stackAdd(new Statement.Print(next));
   }
 
   private void expr(Symbol next) {
