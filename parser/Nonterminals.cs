@@ -1,5 +1,65 @@
-class Statement {
+abstract class Statement : Symbol {
+  public abstract string GetName();
 
+  public class Print : Statement {
+    public Print(Symbol content) {
+      Content = content;
+    }
+    public Symbol Content { get; }
+    public override string GetName() {
+      return "PRINT";
+    }
+  }
+
+  public class Declarement : Statement {
+    public Declarement(VarIdentifier identifier, string type, Expression initializer) {
+      Identifier = identifier;
+      Type = type;
+      Initializer = initializer;
+    }
+    public VarIdentifier Identifier { get; }
+    public string Type { get; }
+    public Expression Initializer { get; }
+
+    public override string GetName() {
+      return "DECLAREMENT";
+    }
+  }
+
+  public class Assignment : Statement {
+    public Assignment(VarIdentifier ident, Expression value) {
+      Identifier = ident;
+      Value = value;
+    }
+
+    public VarIdentifier Identifier { get; }
+    public Expression Value { get; }
+
+    public override string GetName() { 
+      return "ASSIGNMENT";
+    }
+
+    public override string ToString() {
+      return string.Format("(assign {0} {1})", Identifier, Value);
+    }
+  }
+}
+
+
+
+class VarIdentifier : Symbol {
+  public VarIdentifier(string name) {
+    Name = name;
+  }
+
+  public string Name { get; }
+  public string GetName() {
+    return "VAR_IDENTIFIER";
+  }
+
+  public override string ToString() {
+    return string.Format("(ident {0})", Name);
+  }
 }
 
 class Expression : Symbol {

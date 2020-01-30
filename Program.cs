@@ -19,8 +19,12 @@ namespace minipl_interpreter
       // {
       //   Console.Write(token + " ");
       // }
+      var program = new Parser(tokens).Parse();
+      Console.WriteLine();
 
-      new Parser(tokens).Parse();
+      foreach (var stmt in program) {
+        Console.WriteLine(stmt);
+      }
 
       Console.Write("\n");
       return 0;

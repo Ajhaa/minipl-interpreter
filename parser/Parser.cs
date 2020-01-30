@@ -15,10 +15,10 @@ class Parser {
 
   public List<Statement> Parse() {
     while (index < tokens.Count) {
-      // foreach (Symbol s in stack) {
-      //   Console.Write(s + " ");
-      // }
-      // Console.Write("\n");
+      foreach (Symbol s in stack) {
+        Console.Write(s + " ");
+      }
+      Console.Write("\n");
      // Console.WriteLine("Current: " + tokens[index]);
       stackAdd(tokens[index]);
     }
@@ -28,6 +28,9 @@ class Parser {
 
   private void stackAdd(Symbol s) {
     switch (s.GetName()) {
+      case "SEMICOLON":
+        statement();
+        return;
       case "OPERAND":
         if (stack.Count > 0) {
           expr(s);
@@ -35,6 +38,10 @@ class Parser {
         }
 
         shift(s);
+        return;
+
+      case "IDENTIFIER":
+        stackAdd(new VarIdentifier(((Token) s).Value));
         return;
 
       case "INTEGER":
@@ -55,9 +62,43 @@ class Parser {
     }
   }
 
+  private void statement() {
+    var next = stack.Pop();
+
+    switch (next.GetName()) {
+      case "EXPRESSION":
+        if (stack.Peek().GetName() == "ASSIGN") {
+          assignment(next);
+        } else {
+          //printStatement();
+          throw new System.NotImplementedException("No print yet, sorry!");
+        }
+        break;
+      default:
+        throw new System.NotImplementedException("Statements missing");
+    }
+    program.Add((Statement)stack.Pop());
+  }
+
   private void shift(Symbol next) {
     stack.Push(next);
     index++;
+  }
+
+  private void assignment(Symbol s) {
+    stack.Pop();
+    var next = stack.Peek();
+    if (next.GetName() == "KEYWORD") {
+      declaration(s);
+      return;
+    }
+
+    var identifier = (VarIdentifier) stack.Pop();
+    stackAdd(new Statement.Assignment(identifier, (Expression) s));
+  }
+
+  private void declaration(Symbol s) {
+
   }
 
   private void expr(Symbol next) {
@@ -74,7 +115,6 @@ class Parser {
     }
 
     stackAdd(new Expression(first, op, second)); 
-    Console.WriteLine("RESULT: " + stack.Peek());
   }
 
   private void parens() {
