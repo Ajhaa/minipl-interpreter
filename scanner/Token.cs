@@ -5,7 +5,7 @@ enum TokenType
   RIGHT_PAREN, LEFT_PAREN
 }
 
-class Token
+class Token : Symbol
 {
 
   public Token(TokenType type, string value)
@@ -18,6 +18,10 @@ class Token
 
   public TokenType Type { get; }
   public string Value { get; }
+
+  public string GetName() {
+    return Type.ToString();
+  }
 
   public override string ToString()
   {

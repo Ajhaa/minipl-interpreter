@@ -15,10 +15,12 @@ namespace minipl_interpreter
       var fileAsString = File.ReadAllText(args[0]);
       var tokens = new Scanner(fileAsString).Tokenize();
 
-      foreach (var token in tokens)
-      {
-        Console.Write(token + " ");
-      }
+      // foreach (var token in tokens)
+      // {
+      //   Console.Write(token + " ");
+      // }
+
+      new Parser(tokens).Parse();
 
       Console.Write("\n");
       return 0;
