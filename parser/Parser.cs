@@ -66,6 +66,11 @@ class Parser {
     var next = stack.Pop();
 
     switch (next.GetName()) {
+      // TODO better way to handle lone int literals?
+      case "OPERAND":
+        stack.Push(new Expression(null, null, (Operand) next));
+        statement();
+        return;
       case "EXPRESSION":
         if (stack.Peek().GetName() == "ASSIGN") {
           assignment(next);
@@ -78,11 +83,6 @@ class Parser {
         throw new System.NotImplementedException("Statements missing");
     }
     program.Add((Statement)stack.Pop());
-  }
-
-  private void shift(Symbol next) {
-    stack.Push(next);
-    index++;
   }
 
   private void assignment(Symbol s) {
@@ -98,7 +98,21 @@ class Parser {
   }
 
   private void declaration(Symbol s) {
+    var type = (Token) stack.Pop();
+    // TODO check that this is colon
+    stack.Pop();
+    var identifier = (VarIdentifier) stack.Pop();
+    try {
+      stack.Pop();
+    } catch (Exception e) {
+      throw new System.Exception("Expected 'var' for variable declaration");
+    }
+    stackAdd(new Statement.Declarement(identifier, type.Value, (Expression) s));
+  }
 
+    private void shift(Symbol next) {
+    stack.Push(next);
+    index++;
   }
 
   private void expr(Symbol next) {

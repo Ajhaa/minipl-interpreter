@@ -9,6 +9,10 @@ abstract class Statement : Symbol {
     public override string GetName() {
       return "PRINT";
     }
+
+    public override string ToString() {
+      return string.Format("(print {0})", Content);
+    }
   }
 
   public class Declarement : Statement {
@@ -23,6 +27,10 @@ abstract class Statement : Symbol {
 
     public override string GetName() {
       return "DECLAREMENT";
+    }
+
+    public override string ToString() {
+      return string.Format("(declare {0} {1} {2})", Identifier, Type, Initializer);
     }
   }
 

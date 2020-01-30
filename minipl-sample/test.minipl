@@ -1,2 +1,5 @@
-variable := 1 + 1;
-another := 1 * (2 / 3);
+var variable: int := 1 + 1;
+var another: int := 1 * (2 / 3);
+another := 123;
+var another1: int := 11151;
+var str : string := "Foo bar";
