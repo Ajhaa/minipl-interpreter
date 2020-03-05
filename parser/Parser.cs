@@ -14,10 +14,10 @@ class Parser {
 
   public List<Statement> Parse() {
     while (index < tokens.Count) {
-      foreach (Symbol s in stack) {
-        Console.Write(s + " ");
-      }
-      Console.Write("\n");
+      // foreach (Symbol s in stack) {
+      //   Console.Write(s + " ");
+      // }
+      // Console.Write("\n");
       stackAdd(tokens[index]);
     }
     return program;
