@@ -1,17 +1,25 @@
+using System.Collections.Generic;
+using System;
+
 abstract class Statement : Symbol {
   public abstract string GetName();
+  public abstract void Interpret(Dictionary<string, object> environment);
 
   public class Print : Statement {
-    public Print(Symbol content) {
+    public Print(Expression content) {
       Content = content;
     }
-    public Symbol Content { get; }
+    public Expression Content { get; }
     public override string GetName() {
       return "PRINT";
     }
 
     public override string ToString() {
       return string.Format("(print {0})", Content);
+    }
+
+    public override void Interpret(Dictionary<string, object> environment) {
+      Console.WriteLine(Content.Eval().ToString());
     }
   }
 
@@ -32,6 +40,10 @@ abstract class Statement : Symbol {
     public override string ToString() {
       return string.Format("(declare {0} {1} {2})", Identifier, Type, Initializer);
     }
+
+    public override void Interpret(Dictionary<string, object> environment) {
+      throw new System.NotImplementedException("NOT IMPLEMENTED");
+    }
   }
 
   public class Assignment : Statement {
@@ -49,6 +61,10 @@ abstract class Statement : Symbol {
 
     public override string ToString() {
       return string.Format("(assign {0} {1})", Identifier, Value);
+    }
+
+    public override void Interpret(Dictionary<string, object> environment) {
+      throw new System.NotImplementedException("NOT IMPLEMENTED");
     }
   }
 }
@@ -86,6 +102,18 @@ class Expression : Symbol {
   public override string ToString() {
     return string.Format("(expr {1} {0} {2})", First, Operator, Second);
   }
+
+  public object Eval() {
+    if (Operator == null) {
+      return Second.Eval();
+    }
+    switch (Operator.GetName()) {
+      case "PLUS":
+        return ((int) First.Eval()) + ((int) Second.Eval());
+      default:
+        throw new System.NotImplementedException("NOT IMPLEMENTED");
+    }
+  }
 }
 
 class Operand : Symbol {
@@ -93,7 +121,7 @@ class Operand : Symbol {
     Value = value;
   }
 
-  Symbol Value { get; }
+  public Symbol Value { get; }
 
   public string GetName() {
     return "OPERAND";
@@ -101,5 +129,16 @@ class Operand : Symbol {
 
   public override string ToString() {
     return string.Format("(opnd {0})", Value.ToString());
+  }
+
+  public object Eval() {
+    switch (Value.GetName()) {
+      case "EXPRESSION":
+        return ((Expression) Value).Eval();
+      case "INTEGER":
+        return Int32.Parse(((Token) Value).Value);
+      default:
+        return ((Token) Value).Value;
+    }
   }
 }

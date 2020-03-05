@@ -14,11 +14,10 @@ class Parser {
 
   public List<Statement> Parse() {
     while (index < tokens.Count) {
-      foreach (Symbol s in stack) {
-        Console.Write(s + " ");
-      }
-      Console.Write("\n");
-     // Console.WriteLine("Current: " + tokens[index]);
+      // foreach (Symbol s in stack) {
+      //   Console.Write(s + " ");
+      // }
+      // Console.Write("\n");
       stackAdd(tokens[index]);
     }
     return program;
@@ -125,7 +124,7 @@ class Parser {
 
   private void printStatement(Symbol next) {
     stack.Pop();
-    stackAdd(new Statement.Print(next));
+    stackAdd(new Statement.Print((Expression) next));
   }
 
   private void expr(Symbol next) {
@@ -154,7 +153,6 @@ class Parser {
 
   private void parens() {
     var expression = (Expression) stack.Pop();
-    Console.WriteLine(expression);
     var matchingParen = (Token) stack.Pop();
     if (matchingParen.Type != LEFT_PAREN) {
       throw new Exception("Unmatched right paren");
