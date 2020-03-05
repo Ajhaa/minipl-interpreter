@@ -72,10 +72,13 @@ class Parser {
       // TODO better way to handle lone int literals and identifiers?
       case "VAR_IDENTIFIER":
         // TODO what if other keyword?
-        if (stack.Peek().GetName() == "KEYWORD") {
-
-          readStatement(next);
-          break;
+        var peek = stack.Peek();
+        if (peek.GetName() == "KEYWORD") {
+          var kw = (Token) peek;
+          if (kw.Value == "READ") {
+            readStatement(next);
+            break;
+          }
         }
         stack.Push(new Expression(null, null, new Operand(next)));
         return;

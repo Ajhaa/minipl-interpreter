@@ -4,6 +4,7 @@ using System;
 abstract class Statement : Symbol {
   public abstract string GetName();
   public abstract void Interpret(Dictionary<string, object> environment);
+  public abstract bool Analyze(Dictionary<string, Variable> environment);
 
   public class Print : Statement {
     public Print(Expression content) {
@@ -20,6 +21,10 @@ abstract class Statement : Symbol {
 
     public override void Interpret(Dictionary<string, object> environment) {
       Console.WriteLine(Content.Eval(environment).ToString());
+    }
+
+    public override bool Analyze(Dictionary<string, Variable> environment) {
+      return Content.Type(environment) != null;
     }
   }
 
@@ -43,6 +48,15 @@ abstract class Statement : Symbol {
         environment[Target.Name] = Int32.Parse(input);
       } catch {
         environment[Target.Name] = input;
+      }
+    }
+
+    public override bool Analyze(Dictionary<string, Variable> environment) {
+      if (environment.ContainsKey(Target.Name)) {
+        return true;
+      } else {
+        Console.WriteLine(string.Format("Cannot read to uninitialized variable {0}", Target.Name));
+        return false;
       }
     }
   }
@@ -72,6 +86,26 @@ abstract class Statement : Symbol {
       }
       environment.Add(Identifier.Name, Initializer.Eval(environment));
     }
+
+    public override bool Analyze(Dictionary<string, Variable> environment) {
+      if (environment.ContainsKey(Identifier.Name)) {
+        Console.WriteLine(string.Format("Cannot initialize variable '{0}' twice", Identifier.Name));
+        return false;
+      }
+      
+      if (Initializer == null) {
+        return true;
+      }
+
+      var initializerType = Initializer.Type(environment);
+      if (initializerType != Type) {
+        Console.WriteLine(string.Format("Cannot initialize variable '{0}' of type {1} to type {2}", Identifier.Name, Type, initializerType));
+        return false;
+      }
+
+      environment.Add(Identifier.Name, new Variable(Type, null));
+      return true;    
+    }
   }
 
   public class Assignment : Statement {
@@ -99,9 +133,24 @@ abstract class Statement : Symbol {
 
       environment[Identifier.Name] = Value.Eval(environment);
     }
+    public override bool Analyze(Dictionary<string, Variable> environment) {
+      if (!environment.ContainsKey(Identifier.Name)) {
+        Console.WriteLine(string.Format("Cannot assign to uninitialized variable '{0}'", Identifier.Name));
+        return false;
+      }
+
+      var variableType = environment[Identifier.Name].Type;
+
+      var initializerType = Value.Type(environment);
+      if (initializerType != variableType) {
+        Console.WriteLine(string.Format("Cannot assign value of type {1} to variable {0} of type {2}", Identifier.Name, variableType, initializerType));
+        return false;
+      }
+
+      return true;  
+    }
   }
 }
-
 
 
 class VarIdentifier : Symbol {
@@ -137,6 +186,7 @@ class Expression : Symbol {
   }
 
   public object Eval(Dictionary<string, object> environment) {
+    // TODO UNARY
     if (Operator == null) {
       return Second.Eval(environment);
     }
@@ -152,6 +202,19 @@ class Expression : Symbol {
       default:
         throw new System.NotImplementedException(string.Format("{0} NOT IMPLEMENTED", Operator.GetName()));
     }
+  }
+
+  public string Type(Dictionary<string, Variable> environment) {
+    if (First == null) {
+      return Second.Type(environment);
+    }
+
+    if (First.Type(environment) != Second.Type(environment)) {
+      Console.WriteLine(string.Format("Cannot operate with {0} and {1}", First.Type(environment), Second.Type(environment)));
+      return null;
+    }
+
+    return First.Type(environment);
   }
 }
 
@@ -181,6 +244,28 @@ class Operand : Symbol {
         return environment.GetValueOrDefault(ident.Name, null);
       default:
         return ((Token) Value).Value;
+    }
+  }
+
+  public string Type(Dictionary<string, Variable> environment) {
+    switch (Value.GetName()) {
+      case "EXPRESSION":
+        return ((Expression) Value).Type(environment);
+      case "INTEGER":
+        return "int";
+      case "STRING":
+        return "string";
+      case "VAR_IDENTIFIER":
+        var ident = (VarIdentifier) Value; 
+
+        if (!environment.ContainsKey(ident.Name)) {
+          Console.WriteLine(string.Format("Cannot operate on uninitalized variable '{0}'", ident.Name));
+          return null;
+        }
+
+        return environment[ident.Name].Type;
+      default:
+        return null;
     }
   }
 }

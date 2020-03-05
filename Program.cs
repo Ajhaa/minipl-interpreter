@@ -21,6 +21,10 @@ namespace minipl_interpreter
       // }
       var program = new Parser(tokens).Parse();
 
+      if (new Analyzer(program).Analyze() == null) {
+        return 1;
+      }
+
       // Console.WriteLine();
 
 
