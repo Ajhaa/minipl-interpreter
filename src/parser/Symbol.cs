@@ -1,3 +1,4 @@
-interface Symbol {
-  string GetName();
+interface Symbol
+{
+    string GetName();
 }

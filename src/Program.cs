@@ -3,38 +3,39 @@ using System.IO;
 
 namespace minipl_interpreter
 {
-  class Program
-  {
-    static int Main(string[] args)
+    class Program
     {
-      if (args.Length == 0)
-      {
-        Console.WriteLine("Please enter a minipl program path as argument");
-        return 1;
-      }
-      var fileAsString = File.ReadAllText(args[0]);
-      var tokens = new Scanner(fileAsString).Tokenize();
+        static int Main(string[] args)
+        {
+            if (args.Length == 0)
+            {
+                Console.WriteLine("Please enter a minipl program path as argument");
+                return 1;
+            }
+            var fileAsString = File.ReadAllText(args[0]);
+            var tokens = new Scanner(fileAsString).Tokenize();
 
-      // foreach (var token in tokens)
-      // {
-      //   Console.Write(token + " ");
-      // }
-      var program = new Parser(tokens).Parse();
-      // foreach (var stmt in program) {
-      //   Console.WriteLine(stmt);
-      // }
-      var environment = new Analyzer(program).Analyze();
-      if (environment == null) {
-        return 1;
-      }
+            // foreach (var token in tokens)
+            // {
+            //   Console.Write(token + " ");
+            // }
+            var program = new Parser(tokens).Parse();
+            // foreach (var stmt in program) {
+            //   Console.WriteLine(stmt);
+            // }
+            var environment = new Analyzer(program).Analyze();
+            if (environment == null)
+            {
+                return 1;
+            }
 
-      // Console.WriteLine();
+            // Console.WriteLine();
 
 
-      
 
-      new Interpreter(program, environment).Interpret();
-      return 0;
+
+            new Interpreter(program, environment).Interpret();
+            return 0;
+        }
     }
-  }
 }

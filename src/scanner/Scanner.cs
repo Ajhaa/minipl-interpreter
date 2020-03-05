@@ -2,226 +2,226 @@ using System.Collections.Generic;
 using static TokenType;
 class Scanner
 {
-  public Scanner(string input)
-  {
-    this.input = input;
-  }
-
-  private string input;
-
-  // private int start = 0;
-  private int index = 0;
-  private int line = 1;
-  private List<Token> tokens = new List<Token>();
-
-  public List<Token> Tokenize()
-  {
-    while (index < input.Length)
+    public Scanner(string input)
     {
-      consumeToken();
-      index++;
+        this.input = input;
     }
-    return tokens;
-  }
 
-  private void addToken(Token t)
-  {
-    tokens.Add(t);
-  }
+    private string input;
 
-  private void consumeToken()
-  {
-    char current = input[index];
-    switch (current)
+    // private int start = 0;
+    private int index = 0;
+    private int line = 1;
+    private List<Token> tokens = new List<Token>();
+
+    public List<Token> Tokenize()
     {
-      // unambiguous single char tokens
-      case ';':
-        addToken(new Token(SEMICOLON));
-        return;
-      case '+':
-        addToken(new Token(PLUS));
-        return;
-      case '-':
-        addToken(new Token(MINUS));
-        return;
-      case '*':
-        addToken(new Token(STAR));
-        return;
-      case '<':
-        addToken(new Token(LESS_THAN));
-        return;
-      case '>':
-        addToken(new Token(GREATER_THAN));
-        return;
-      case '=':
-        addToken(new Token(EQUAL));
-        return;
-      case '&':
-        addToken(new Token(AND));
-        return;
-      case '!':
-        addToken(new Token(NOT));
-        return;
-      case ')':
-        addToken(new Token(RIGHT_PAREN));
-        return;
-      case '(':
-        addToken(new Token(LEFT_PAREN));
-        return;
-      // comment or slash
-      case '/':
-        var next = lookahead();
-        if (next == '/')
+        while (index < input.Length)
         {
-          lineComment();
-          return;
+            consumeToken();
+            index++;
         }
-        if (next == '*')
+        return tokens;
+    }
+
+    private void addToken(Token t)
+    {
+        tokens.Add(t);
+    }
+
+    private void consumeToken()
+    {
+        char current = input[index];
+        switch (current)
         {
-          multiLineComment();
-          return;
+            // unambiguous single char tokens
+            case ';':
+                addToken(new Token(SEMICOLON));
+                return;
+            case '+':
+                addToken(new Token(PLUS));
+                return;
+            case '-':
+                addToken(new Token(MINUS));
+                return;
+            case '*':
+                addToken(new Token(STAR));
+                return;
+            case '<':
+                addToken(new Token(LESS_THAN));
+                return;
+            case '>':
+                addToken(new Token(GREATER_THAN));
+                return;
+            case '=':
+                addToken(new Token(EQUAL));
+                return;
+            case '&':
+                addToken(new Token(AND));
+                return;
+            case '!':
+                addToken(new Token(NOT));
+                return;
+            case ')':
+                addToken(new Token(RIGHT_PAREN));
+                return;
+            case '(':
+                addToken(new Token(LEFT_PAREN));
+                return;
+            // comment or slash
+            case '/':
+                var next = lookahead();
+                if (next == '/')
+                {
+                    lineComment();
+                    return;
+                }
+                if (next == '*')
+                {
+                    multiLineComment();
+                    return;
+                }
+                addToken(new Token(SLASH));
+                return;
+            // colon or assignment
+            case ':':
+                if (lookahead() == '=')
+                {
+                    index++;
+                    addToken(new Token(ASSIGN));
+                    return;
+                }
+                addToken(new Token(COLON));
+                return;
+            // range
+            case '.':
+                if (lookahead() == '.')
+                {
+                    index++;
+                    addToken(new Token(RANGE));
+                    return;
+                }
+                else
+                {
+                    throw new System.Exception("PANIC");
+                }
+            case '"':
+                makeString();
+                return;
+            case ' ':
+                return;
+            case '\n':
+                line++;
+                return;
+            default:
+                if (isLetter(current))
+                {
+                    identOrKeyword();
+                    return;
+                }
+
+                if (isNumber(current))
+                {
+                    makeInteger();
+                    return;
+                }
+                throw new System.Exception("PANIC");
         }
-        addToken(new Token(SLASH));
-        return;
-      // colon or assignment
-      case ':':
-        if (lookahead() == '=')
+    }
+
+    private bool isLetter(char c)
+    {
+        return (c >= 'a' && c <= 'z') ||
+               (c >= 'A' && c <= 'Z');
+    }
+
+    private bool isNumber(char c)
+    {
+        return (c >= '0' && c <= '9');
+    }
+
+    private bool isLegalChar(char c)
+    {
+        return isLetter(c) || isNumber(c) || c == '_';
+    }
+
+    private char lookahead()
+    {
+        if (index + 1 >= input.Length)
         {
-          index++;
-          addToken(new Token(ASSIGN));
-          return;
+            return (char)3;
         }
-        addToken(new Token(COLON));
-        return;
-      // range
-      case '.':
-        if (lookahead() == '.')
+        return input[index + 1];
+    }
+
+    private void identOrKeyword()
+    {
+        int stringStart = index;
+        while (isLegalChar(lookahead()))
         {
-          index++;
-          addToken(new Token(RANGE));
-          return;
+            index++;
+        }
+
+        var result = input.Substring(stringStart, index - stringStart + 1);
+        if (Keywords.isKeyword(result))
+        {
+            addToken(new Token(KEYWORD, result));
         }
         else
         {
-          throw new System.Exception("PANIC");
+            addToken(new Token(IDENTIFIER, result));
         }
-      case '"':
-        makeString();
-        return;
-      case ' ':
-        return;
-      case '\n':
-        line++;
-        return;
-      default:
-        if (isLetter(current))
+
+    }
+
+    private void makeString()
+    {
+        index++;
+        int stringStart = index;
+        while (input[index] != '"')
         {
-          identOrKeyword();
-          return;
+            if (index >= input.Length)
+            {
+                throw new System.Exception("UNTERMINATED STRING");
+            }
+            index++;
         }
 
-        if (isNumber(current))
+        addToken(new Token(STRING, input.Substring(stringStart, index - stringStart)));
+    }
+
+    private void makeInteger()
+    {
+        int numberStart = index;
+
+        while (true)
         {
-          makeInteger();
-          return;
+            var next = lookahead();
+            if (isLetter(next))
+            {
+                throw new System.Exception("Unexpected char while parsing integer literal");
+            }
+
+            if (!isNumber(next))
+            {
+                break;
+            }
+            index++;
         }
-        throw new System.Exception("PANIC");
-    }
-  }
 
-  private bool isLetter(char c)
-  {
-    return (c >= 'a' && c <= 'z') ||
-           (c >= 'A' && c <= 'Z');
-  }
-
-  private bool isNumber(char c)
-  {
-    return (c >= '0' && c <= '9');
-  }
-
-  private bool isLegalChar(char c)
-  {
-    return isLetter(c) || isNumber(c) || c == '_';
-  }
-
-  private char lookahead()
-  {
-    if (index + 1 >= input.Length)
-    {
-      return (char)3;
-    }
-    return input[index + 1];
-  }
-
-  private void identOrKeyword()
-  {
-    int stringStart = index;
-    while (isLegalChar(lookahead()))
-    {
-      index++;
+        addToken(new Token(INTEGER, input.Substring(numberStart, index - numberStart + 1)));
     }
 
-    var result = input.Substring(stringStart, index - stringStart + 1);
-    if (Keywords.isKeyword(result))
+    private void lineComment()
     {
-      addToken(new Token(KEYWORD, result));
-    }
-    else
-    {
-      addToken(new Token(IDENTIFIER, result));
+        do
+        {
+            index++;
+        } while (input[index] != '\n');
     }
 
-  }
-
-  private void makeString()
-  {
-    index++;
-    int stringStart = index;
-    while (input[index] != '"')
+    private void multiLineComment()
     {
-      if (index >= input.Length)
-      {
-        throw new System.Exception("UNTERMINATED STRING");
-      }
-      index++;
+        throw new System.NotImplementedException();
     }
-
-    addToken(new Token(STRING, input.Substring(stringStart, index - stringStart)));
-  }
-
-  private void makeInteger()
-  {
-    int numberStart = index;
-
-    while (true)
-    {
-      var next = lookahead();
-      if (isLetter(next))
-      {
-        throw new System.Exception("Unexpected char while parsing integer literal");
-      }
-
-      if (!isNumber(next))
-      {
-        break;
-      }
-      index++;
-    }
-
-    addToken(new Token(INTEGER, input.Substring(numberStart, index - numberStart + 1)));
-  }
-
-  private void lineComment()
-  {
-    do
-    {
-      index++;
-    } while (input[index] != '\n');
-  }
-
-  private void multiLineComment()
-  {
-    throw new System.NotImplementedException();
-  }
 }
