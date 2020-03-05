@@ -1,7 +1,1 @@
-var x : int := 1;
-var z : int := 2;
-var y : int;
-print "enter number";
-read y;
-
-print 1 + (2 + y);
+print (1=1) & !("bar"="foo");

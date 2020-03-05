@@ -20,7 +20,9 @@ namespace minipl_interpreter
       //   Console.Write(token + " ");
       // }
       var program = new Parser(tokens).Parse();
-
+      foreach (var stmt in program) {
+        Console.WriteLine(stmt);
+      }
       var environment = new Analyzer(program).Analyze();
       if (environment == null) {
         return 1;
@@ -29,9 +31,7 @@ namespace minipl_interpreter
       // Console.WriteLine();
 
 
-      // foreach (var stmt in program) {
-      //   Console.WriteLine(stmt);
-      // }
+      
 
       new Interpreter(program, environment).Interpret();
       return 0;

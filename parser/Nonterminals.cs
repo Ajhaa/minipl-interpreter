@@ -47,10 +47,18 @@ abstract class Statement : Symbol {
       var type = environment.GetType(Target.Name);
       switch (type) {
         case "int":
-          environment.Assign(Target.Name, Int32.Parse(input));
+          try { 
+            environment.Assign(Target.Name, Int32.Parse(input));
+          } catch {
+            Console.WriteLine("Could not parse to int");
+          }
           break;
         case "bool":
-          environment.Assign(Target.Name, Boolean.Parse(input));
+          try { 
+            environment.Assign(Target.Name, Boolean.Parse(input));
+          } catch {
+            Console.WriteLine("Could not parse to bool");
+          }
           break;
         default:
           environment.Assign(Target.Name, input);
@@ -197,27 +205,51 @@ class Expression : Symbol {
 
   public object Eval(Environment environment) {
     // TODO UNARY
+    var second = Second.Eval(environment);
+
     if (Operator == null) {
-      return Second.Eval(environment);
+      return second;
     }
+
+    if (First == null) {
+      switch (Operator.GetName()) {
+        case "NOT":
+          return !((bool) second);
+        case "MINUS":
+          return -((int) second);
+        throw new System.NotImplementedException(string.Format("UNARY {0} NOT IMPLEMENTED", Operator.GetName()));
+      }
+    }
+
+    var first = First.Eval(environment);
+
+    // TODO Sematically check available operations (string - string impossible)
+    // TODO abstract these operations (and maybe variable types)
     switch (Operator.GetName()) {
       case "PLUS":
-        return ((int) First.Eval(environment)) + ((int) Second.Eval(environment));
+        return ((int) first) + ((int) second);
       case "MINUS":
-        return ((int) First.Eval(environment)) - ((int) Second.Eval(environment));
+        return ((int) first) - ((int) second);
       case "STAR":
-        return ((int) First.Eval(environment)) * ((int) Second.Eval(environment));
+        return ((int) first) * ((int) second);
       case "SLASH":
-        return ((int) First.Eval(environment)) / ((int) Second.Eval(environment));  
+        return ((int) first) / ((int) second);
+      case "AND":
+        return ((bool) first) && ((bool) second);
+      case "EQUAL":
+        return first.Equals(second);  
       default:
-        throw new System.NotImplementedException(string.Format("{0} NOT IMPLEMENTED", Operator.GetName()));
+        throw new System.NotImplementedException(string.Format("BINARY {0} NOT IMPLEMENTED", Operator.GetName()));
     }
   }
 
   public string Type(Environment environment) {
+    
     if (First == null) {
       return Second.Type(environment);
     }
+
+    
 
     var firstType = First.Type(environment);
     var secondType = Second.Type(environment);
@@ -229,6 +261,15 @@ class Expression : Symbol {
     if (firstType != secondType) {
       Console.WriteLine(string.Format("Cannot operate with {0} and {1}", firstType, secondType));
       return null;
+    }
+
+    // TODO use eval to get types?
+    if (Operator != null &&
+          (Operator.Type == TokenType.EQUAL ||
+           Operator.Type == TokenType.AND ||
+           Operator.Type == TokenType.NOT)) {
+        
+      return "bool";
     }
 
     return First.Type(environment);

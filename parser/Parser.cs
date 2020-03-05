@@ -14,10 +14,10 @@ class Parser {
 
   public List<Statement> Parse() {
     while (index < tokens.Count) {
-      // foreach (Symbol s in stack) {
-      //   Console.Write(s + " ");
-      // }
-      // Console.Write("\n");
+      foreach (Symbol s in stack) {
+        Console.Write(s + " ");
+      }
+      Console.Write("\n");
       stackAdd(tokens[index]);
     }
     return program;
@@ -171,7 +171,7 @@ class Parser {
     if (stack.Count > 0) {
       if (stack.Peek().GetName() == "VAR_IDENTIFIER") {
         first = new Operand(stack.Pop());
-      } else {
+      } else if (stack.Peek().GetName() == "OPERAND"){
         first = (Operand) stack.Pop();
       }
     }
@@ -197,7 +197,7 @@ class Parser {
     try {
       var token = (Token) t;
       var type = token.Type;
-      return type == PLUS || type == MINUS || type == STAR || type == SLASH;
+      return type == PLUS || type == MINUS || type == STAR || type == SLASH || type == AND || type == NOT || type == EQUAL;
     } catch {
       return false;
     }
