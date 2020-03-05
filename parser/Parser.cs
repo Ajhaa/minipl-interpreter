@@ -71,6 +71,12 @@ class Parser {
     switch (next.GetName()) {
       // TODO better way to handle lone int literals and identifiers?
       case "VAR_IDENTIFIER":
+        // TODO what if other keyword?
+        if (stack.Peek().GetName() == "KEYWORD") {
+
+          readStatement(next);
+          break;
+        }
         stack.Push(new Expression(null, null, new Operand(next)));
         return;
 
@@ -78,7 +84,21 @@ class Parser {
         stack.Push(new Expression(null, null, (Operand) next));
         statement();
         return;
-
+      case "KEYWORD":
+        var keyword = (Token) next;
+        switch (keyword.Value) {
+          case "int":
+          case "string":
+          case "bool":
+            stack.Push(keyword);
+            declaration(null);
+            break;
+          default:
+            Console.WriteLine(string.Format("Unexpected keyword: {0}", keyword));
+            //TODO ERROR HANDLING
+            return;  
+        }
+        break;
       case "EXPRESSION":
         if (stack.Peek().GetName() == "ASSIGN") {
           assignment(next);
@@ -117,7 +137,7 @@ class Parser {
     stackAdd(new Statement.Declarement(identifier, type.Value, (Expression) s));
   }
 
-    private void shift(Symbol next) {
+  private void shift(Symbol next) {
     stack.Push(next);
     index++;
   }
@@ -127,13 +147,18 @@ class Parser {
     stackAdd(new Statement.Print((Expression) next));
   }
 
+  private void readStatement(Symbol next) {
+    stack.Pop();
+    stackAdd(new Statement.Read((VarIdentifier) next));
+  }
+
   private void expr(Symbol next) {
     var second = next;
     if (stack.Count == 0 ) {
       shift(next);
       return;
     }
-    var op = (Token) stack.Pop();
+    var op = stack.Pop();
     if (!isOperator(op)) {
       stack.Push(op);
       shift(next);
@@ -152,7 +177,7 @@ class Parser {
       second = new Operand(second);
     }
 
-    stackAdd(new Expression(first, op, (Operand) second)); 
+    stackAdd(new Expression(first, (Token) op, (Operand) second)); 
   }
 
   private void parens() {
@@ -165,8 +190,13 @@ class Parser {
     stackAdd(new Operand(expression));
   }
 
-  private bool isOperator(Token t) {
-    var type = t.Type;
-    return type == PLUS || type == MINUS || type == STAR || type == SLASH;
+  private bool isOperator(Symbol t) {
+    try {
+      var token = (Token) t;
+      var type = token.Type;
+      return type == PLUS || type == MINUS || type == STAR || type == SLASH;
+    } catch {
+      return false;
+    }
   }
 }

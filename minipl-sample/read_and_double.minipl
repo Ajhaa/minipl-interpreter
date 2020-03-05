@@ -1,0 +1,5 @@
+var I : int;
+print "Enter a number";
+read I;
+
+print I * 2;

@@ -23,6 +23,30 @@ abstract class Statement : Symbol {
     }
   }
 
+  public class Read : Statement {
+    public Read(VarIdentifier target) {
+      Target = target;
+    }
+    public VarIdentifier Target { get; }
+    public override string GetName() {
+      return "READ";
+    }
+
+    public override string ToString() {
+      return string.Format("(read {0})", Target);
+    }
+
+    public override void Interpret(Dictionary<string, object> environment) {
+      var input = Console.ReadLine();
+      // TODO CHECK TYPE!!!!!111!!
+      try {
+        environment[Target.Name] = Int32.Parse(input);
+      } catch {
+        environment[Target.Name] = input;
+      }
+    }
+  }
+
   public class Declarement : Statement {
     public Declarement(VarIdentifier identifier, string type, Expression initializer) {
       Identifier = identifier;
