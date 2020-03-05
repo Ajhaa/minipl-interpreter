@@ -30,6 +30,7 @@ class Parser {
       case "SEMICOLON":
         statement();
         return;
+      
       case "OPERAND":
         if (stack.Count > 0) {
           expr(s);
@@ -38,7 +39,11 @@ class Parser {
 
         shift(s);
         return;
-
+      
+      case "VAR_IDENTIFIER":
+        expr(s);
+        return;
+      
       case "IDENTIFIER":
         stackAdd(new VarIdentifier(((Token) s).Value));
         return;
@@ -65,7 +70,11 @@ class Parser {
     var next = stack.Pop();
 
     switch (next.GetName()) {
-      // TODO better way to handle lone int literals?
+      // TODO better way to handle lone int literals and identifiers?
+      case "VAR_IDENTIFIER":
+        stack.Push(new Expression(null, null, new Operand(next)));
+        return;
+
       case "OPERAND":
         stack.Push(new Expression(null, null, (Operand) next));
         statement();
@@ -120,7 +129,7 @@ class Parser {
   }
 
   private void expr(Symbol next) {
-    var second = (Operand) next;
+    var second = next;
     var op = (Token) stack.Pop();
     if (!isOperator(op)) {
       stack.Push(op);
@@ -129,10 +138,18 @@ class Parser {
     }
     Operand first = null;
     if (stack.Count > 0) {
-      first = (Operand) stack.Pop();
+      if (stack.Peek().GetName() == "VAR_IDENTIFIER") {
+        first = new Operand(stack.Pop());
+      } else {
+        first = (Operand) stack.Pop();
+      }
     }
 
-    stackAdd(new Expression(first, op, second)); 
+    if (second.GetName() == "VAR_IDENTIFIER") {
+      second = new Operand(second);
+    }
+
+    stackAdd(new Expression(first, op, (Operand) second)); 
   }
 
   private void parens() {

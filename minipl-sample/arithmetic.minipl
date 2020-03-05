@@ -1,2 +1,4 @@
-var X : int := 4 + ( 6 * 2);
+var Y : int := 3;
+var Z : int := 3 + Y;
+var X : int := Z + ( Y * Z);
 print X;
