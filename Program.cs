@@ -20,11 +20,8 @@ namespace minipl_interpreter
       //   Console.Write(token + " ");
       // }
       var program = new Parser(tokens).Parse();
-      Console.WriteLine();
 
       new Interpreter(program).Interpret();
-
-      Console.Write("\n");
       return 0;
     }
   }

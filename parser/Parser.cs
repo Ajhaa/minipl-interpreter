@@ -129,6 +129,10 @@ class Parser {
 
   private void expr(Symbol next) {
     var second = next;
+    if (stack.Count == 0 ) {
+      shift(next);
+      return;
+    }
     var op = (Token) stack.Pop();
     if (!isOperator(op)) {
       stack.Push(op);

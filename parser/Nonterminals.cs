@@ -19,7 +19,7 @@ abstract class Statement : Symbol {
     }
 
     public override void Interpret(Dictionary<string, object> environment) {
-      Console.WriteLine(Content.Eval().ToString());
+      Console.WriteLine(Content.Eval(environment).ToString());
     }
   }
 
@@ -42,7 +42,11 @@ abstract class Statement : Symbol {
     }
 
     public override void Interpret(Dictionary<string, object> environment) {
-      throw new System.NotImplementedException("NOT IMPLEMENTED");
+      if (Initializer == null) {
+        environment.Add(Identifier.Name, null);
+        return;
+      }
+      environment.Add(Identifier.Name, Initializer.Eval(environment));
     }
   }
 
@@ -64,7 +68,12 @@ abstract class Statement : Symbol {
     }
 
     public override void Interpret(Dictionary<string, object> environment) {
-      throw new System.NotImplementedException("NOT IMPLEMENTED");
+      if (!environment.ContainsKey(Identifier.Name)) {
+        Console.WriteLine(string.Format("Cannot assign to uninitialized variable {0}", Identifier.Name));
+        return;
+      }
+
+      environment[Identifier.Name] = Value.Eval(environment);
     }
   }
 }
@@ -103,15 +112,21 @@ class Expression : Symbol {
     return string.Format("(expr {1} {0} {2})", First, Operator, Second);
   }
 
-  public object Eval() {
+  public object Eval(Dictionary<string, object> environment) {
     if (Operator == null) {
-      return Second.Eval();
+      return Second.Eval(environment);
     }
     switch (Operator.GetName()) {
       case "PLUS":
-        return ((int) First.Eval()) + ((int) Second.Eval());
+        return ((int) First.Eval(environment)) + ((int) Second.Eval(environment));
+      case "MINUS":
+        return ((int) First.Eval(environment)) - ((int) Second.Eval(environment));
+      case "STAR":
+        return ((int) First.Eval(environment)) * ((int) Second.Eval(environment));
+      case "SLASH":
+        return ((int) First.Eval(environment)) / ((int) Second.Eval(environment));  
       default:
-        throw new System.NotImplementedException("NOT IMPLEMENTED");
+        throw new System.NotImplementedException(string.Format("{0} NOT IMPLEMENTED", Operator.GetName()));
     }
   }
 }
@@ -131,12 +146,15 @@ class Operand : Symbol {
     return string.Format("(opnd {0})", Value.ToString());
   }
 
-  public object Eval() {
+  public object Eval(Dictionary<string, object> environment) {
     switch (Value.GetName()) {
       case "EXPRESSION":
-        return ((Expression) Value).Eval();
+        return ((Expression) Value).Eval(environment);
       case "INTEGER":
         return Int32.Parse(((Token) Value).Value);
+      case "VAR_IDENTIFIER":
+        var ident = (VarIdentifier) Value; 
+        return environment.GetValueOrDefault(ident.Name, null);
       default:
         return ((Token) Value).Value;
     }
