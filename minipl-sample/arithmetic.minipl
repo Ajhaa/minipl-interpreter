@@ -1,4 +1,5 @@
 var Y : string := "foobar";
 var Z : int := 3 + Y;
 var X : int := Z + ( Y * Z);
+Z := "foo";
 print X;

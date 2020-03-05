@@ -11,7 +11,7 @@ class Analyzer {
     public Dictionary<string, Variable> Analyze() {
         var valid = true;
         foreach (var stmt in program) {
-            valid = stmt.Analyze(environment);
+            valid = stmt.Analyze(environment) && valid;
         }
         if (!valid) {
             return null;

@@ -88,23 +88,27 @@ abstract class Statement : Symbol {
     }
 
     public override bool Analyze(Dictionary<string, Variable> environment) {
+      var valid = true;
       if (environment.ContainsKey(Identifier.Name)) {
         Console.WriteLine(string.Format("Cannot initialize variable '{0}' twice", Identifier.Name));
-        return false;
+        valid = false;
       }
       
       if (Initializer == null) {
-        return true;
+        environment.Add(Identifier.Name, new Variable(Type, null));
+        return valid;
       }
 
       var initializerType = Initializer.Type(environment);
-      if (initializerType != Type) {
+      if (initializerType == null) {
+        valid = false;
+      } else if (initializerType != Type) {
         Console.WriteLine(string.Format("Cannot initialize variable '{0}' of type {1} to type {2}", Identifier.Name, Type, initializerType));
-        return false;
+        valid = false;
       }
 
       environment.Add(Identifier.Name, new Variable(Type, null));
-      return true;    
+      return valid;    
     }
   }
 
@@ -142,8 +146,11 @@ abstract class Statement : Symbol {
       var variableType = environment[Identifier.Name].Type;
 
       var initializerType = Value.Type(environment);
+      if (initializerType == null) {
+        return false;
+      }
       if (initializerType != variableType) {
-        Console.WriteLine(string.Format("Cannot assign value of type {1} to variable {0} of type {2}", Identifier.Name, variableType, initializerType));
+        Console.WriteLine(string.Format("Cannot assign value of type {2} to variable {0} of type {1}", Identifier.Name, variableType, initializerType));
         return false;
       }
 
@@ -209,8 +216,15 @@ class Expression : Symbol {
       return Second.Type(environment);
     }
 
-    if (First.Type(environment) != Second.Type(environment)) {
-      Console.WriteLine(string.Format("Cannot operate with {0} and {1}", First.Type(environment), Second.Type(environment)));
+    var firstType = First.Type(environment);
+    var secondType = Second.Type(environment);
+
+    if (firstType == null || secondType == null) {
+      return null;
+    }
+    
+    if (firstType != secondType) {
+      Console.WriteLine(string.Format("Cannot operate with {0} and {1}", firstType, secondType));
       return null;
     }
 
