@@ -1,4 +1,7 @@
-var x : string := 1;
-y := 4;
-var z : int := 3;
-z := "foobar";
+var x : int := 1;
+var z : int := 2;
+var y : int;
+print "enter number";
+read y;
+
+print 1 + (2 + y);

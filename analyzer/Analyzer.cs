@@ -6,9 +6,9 @@ class Analyzer {
     }
     private List<Statement> program;
 
-    private Dictionary<string, Variable> environment = new Dictionary<string, Variable>();
+    private Environment environment = new Environment();
 
-    public Dictionary<string, Variable> Analyze() {
+    public Environment Analyze() {
         var valid = true;
         foreach (var stmt in program) {
             valid = stmt.Analyze(environment) && valid;

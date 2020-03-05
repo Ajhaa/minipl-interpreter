@@ -75,7 +75,7 @@ class Parser {
         var peek = stack.Peek();
         if (peek.GetName() == "KEYWORD") {
           var kw = (Token) peek;
-          if (kw.Value == "READ") {
+          if (kw.Value == "read") {
             readStatement(next);
             break;
           }

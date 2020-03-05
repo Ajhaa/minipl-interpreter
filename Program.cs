@@ -21,7 +21,8 @@ namespace minipl_interpreter
       // }
       var program = new Parser(tokens).Parse();
 
-      if (new Analyzer(program).Analyze() == null) {
+      var environment = new Analyzer(program).Analyze();
+      if (environment == null) {
         return 1;
       }
 
@@ -32,7 +33,7 @@ namespace minipl_interpreter
       //   Console.WriteLine(stmt);
       // }
 
-      new Interpreter(program).Interpret();
+      new Interpreter(program, environment).Interpret();
       return 0;
     }
   }

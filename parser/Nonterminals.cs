@@ -3,8 +3,8 @@ using System;
 
 abstract class Statement : Symbol {
   public abstract string GetName();
-  public abstract void Interpret(Dictionary<string, object> environment);
-  public abstract bool Analyze(Dictionary<string, Variable> environment);
+  public abstract void Interpret(Environment environment);
+  public abstract bool Analyze(Environment environment);
 
   public class Print : Statement {
     public Print(Expression content) {
@@ -19,11 +19,11 @@ abstract class Statement : Symbol {
       return string.Format("(print {0})", Content);
     }
 
-    public override void Interpret(Dictionary<string, object> environment) {
+    public override void Interpret(Environment environment) {
       Console.WriteLine(Content.Eval(environment).ToString());
     }
 
-    public override bool Analyze(Dictionary<string, Variable> environment) {
+    public override bool Analyze(Environment environment) {
       return Content.Type(environment) != null;
     }
   }
@@ -41,18 +41,25 @@ abstract class Statement : Symbol {
       return string.Format("(read {0})", Target);
     }
 
-    public override void Interpret(Dictionary<string, object> environment) {
+    public override void Interpret(Environment environment) {
       var input = Console.ReadLine();
-      // TODO CHECK TYPE!!!!!111!!
-      try {
-        environment[Target.Name] = Int32.Parse(input);
-      } catch {
-        environment[Target.Name] = input;
-      }
+
+      var type = environment.GetType(Target.Name);
+      switch (type) {
+        case "int":
+          environment.Assign(Target.Name, Int32.Parse(input));
+          break;
+        case "bool":
+          environment.Assign(Target.Name, Boolean.Parse(input));
+          break;
+        default:
+          environment.Assign(Target.Name, input);
+          break;
+      }    
     }
 
-    public override bool Analyze(Dictionary<string, Variable> environment) {
-      if (environment.ContainsKey(Target.Name)) {
+    public override bool Analyze(Environment environment) {
+      if (environment.Contains(Target.Name)) {
         return true;
       } else {
         Console.WriteLine(string.Format("Cannot read to uninitialized variable {0}", Target.Name));
@@ -79,23 +86,22 @@ abstract class Statement : Symbol {
       return string.Format("(declare {0} {1} {2})", Identifier, Type, Initializer);
     }
 
-    public override void Interpret(Dictionary<string, object> environment) {
+    public override void Interpret(Environment environment) {
       if (Initializer == null) {
-        environment.Add(Identifier.Name, null);
         return;
       }
-      environment.Add(Identifier.Name, Initializer.Eval(environment));
+      environment.Assign(Identifier.Name, Initializer.Eval(environment));
     }
 
-    public override bool Analyze(Dictionary<string, Variable> environment) {
+    public override bool Analyze(Environment environment) {
       var valid = true;
-      if (environment.ContainsKey(Identifier.Name)) {
+      if (environment.Contains(Identifier.Name)) {
         Console.WriteLine(string.Format("Cannot initialize variable '{0}' twice", Identifier.Name));
         valid = false;
       }
       
       if (Initializer == null) {
-        environment.Add(Identifier.Name, new Variable(Type, null));
+        environment.Declare(Identifier.Name, Type);
         return valid;
       }
 
@@ -107,7 +113,7 @@ abstract class Statement : Symbol {
         valid = false;
       }
 
-      environment.Add(Identifier.Name, new Variable(Type, null));
+      environment.Declare(Identifier.Name, Type);
       return valid;    
     }
   }
@@ -129,21 +135,18 @@ abstract class Statement : Symbol {
       return string.Format("(assign {0} {1})", Identifier, Value);
     }
 
-    public override void Interpret(Dictionary<string, object> environment) {
-      if (!environment.ContainsKey(Identifier.Name)) {
+    public override void Interpret(Environment environment) {
+      if (!environment.Assign(Identifier.Name, Value.Eval(environment))) {
         Console.WriteLine(string.Format("Cannot assign to uninitialized variable {0}", Identifier.Name));
-        return;
       }
-
-      environment[Identifier.Name] = Value.Eval(environment);
     }
-    public override bool Analyze(Dictionary<string, Variable> environment) {
-      if (!environment.ContainsKey(Identifier.Name)) {
+    public override bool Analyze(Environment environment) {
+      if (!environment.Contains(Identifier.Name)) {
         Console.WriteLine(string.Format("Cannot assign to uninitialized variable '{0}'", Identifier.Name));
         return false;
       }
 
-      var variableType = environment[Identifier.Name].Type;
+      var variableType = environment.GetType(Identifier.Name);
 
       var initializerType = Value.Type(environment);
       if (initializerType == null) {
@@ -192,7 +195,7 @@ class Expression : Symbol {
     return string.Format("(expr {1} {0} {2})", First, Operator, Second);
   }
 
-  public object Eval(Dictionary<string, object> environment) {
+  public object Eval(Environment environment) {
     // TODO UNARY
     if (Operator == null) {
       return Second.Eval(environment);
@@ -211,7 +214,7 @@ class Expression : Symbol {
     }
   }
 
-  public string Type(Dictionary<string, Variable> environment) {
+  public string Type(Environment environment) {
     if (First == null) {
       return Second.Type(environment);
     }
@@ -247,7 +250,7 @@ class Operand : Symbol {
     return string.Format("(opnd {0})", Value.ToString());
   }
 
-  public object Eval(Dictionary<string, object> environment) {
+  public object Eval(Environment environment) {
     switch (Value.GetName()) {
       case "EXPRESSION":
         return ((Expression) Value).Eval(environment);
@@ -255,13 +258,13 @@ class Operand : Symbol {
         return Int32.Parse(((Token) Value).Value);
       case "VAR_IDENTIFIER":
         var ident = (VarIdentifier) Value; 
-        return environment.GetValueOrDefault(ident.Name, null);
+        return environment.Get(ident.Name);
       default:
         return ((Token) Value).Value;
     }
   }
 
-  public string Type(Dictionary<string, Variable> environment) {
+  public string Type(Environment environment) {
     switch (Value.GetName()) {
       case "EXPRESSION":
         return ((Expression) Value).Type(environment);
@@ -272,12 +275,12 @@ class Operand : Symbol {
       case "VAR_IDENTIFIER":
         var ident = (VarIdentifier) Value; 
 
-        if (!environment.ContainsKey(ident.Name)) {
+        if (!environment.Contains(ident.Name)) {
           Console.WriteLine(string.Format("Cannot operate on uninitalized variable '{0}'", ident.Name));
           return null;
         }
 
-        return environment[ident.Name].Type;
+        return environment.GetType(ident.Name);
       default:
         return null;
     }

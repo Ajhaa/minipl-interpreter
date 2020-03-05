@@ -2,12 +2,13 @@ using System.Collections.Generic;
 
 class Interpreter {
 
-    public Interpreter(List<Statement> program) {
+    public Interpreter(List<Statement> program, Environment environment) {
         this.program = program;
+        this.environment = environment;
     }
     private List<Statement> program;
 
-    private Dictionary<string, object> environment = new Dictionary<string, object>();
+    private Environment environment;
 
     public void Interpret() {
         foreach (var stmt in program) {
