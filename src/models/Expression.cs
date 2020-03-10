@@ -4,7 +4,15 @@ abstract class Expression : Symbol
 {
     public abstract string GetName();
     public abstract int GetLine();
-    public abstract object Eval(Environment env);
+
+    public abstract T Accept<T>(Visitor<T> visitor);
+
+    public interface Visitor<T>
+    {
+        T visitBinaryExpr(Expression.Binary expr);
+        T visitUnaryExpr(Expression.Unary expr);
+        T visitOperandExpr(Expression.Operand expr);
+    }
     public abstract string Type(Environment env);
 
     public class Binary : Expression
@@ -15,15 +23,16 @@ abstract class Expression : Symbol
             Operator = op;
             Second = second;
         }
-        Operand First { get; set; }
-        Token Operator { get; }
-        Operand Second { get; set; }
+        public Operand First { get; set; }
+        public Token Operator { get; }
+        public Operand Second { get; set; }
         public override string GetName()
         {
             return "BINARY";
         }
 
-        public override int GetLine() {
+        public override int GetLine()
+        {
             return First.GetLine();
         }
 
@@ -32,32 +41,9 @@ abstract class Expression : Symbol
             return string.Format("(expr {1} {0} {2})", First, Operator, Second);
         }
 
-        public override object Eval(Environment environment)
+        public override T Accept<T>(Visitor<T> visitor)
         {
-            // TODO UNARY
-            var second = Second.Eval(environment);
-
-            var first = First.Eval(environment);
-
-            // TODO Sematically check available operations (string - string impossible)
-            // TODO abstract these operations (and maybe variable types)
-            switch (Operator.GetName())
-            {
-                case "PLUS":
-                    return ((int)first) + ((int)second);
-                case "MINUS":
-                    return ((int)first) - ((int)second);
-                case "STAR":
-                    return ((int)first) * ((int)second);
-                case "SLASH":
-                    return ((int)first) / ((int)second);
-                case "AND":
-                    return ((bool)first) && ((bool)second);
-                case "EQUAL":
-                    return first.Equals(second);
-                default:
-                    throw new System.NotImplementedException(string.Format("BINARY {0} NOT IMPLEMENTED", Operator.GetName()));
-            }
+            return visitor.visitBinaryExpr(this);
         }
 
         public override string Type(Environment environment)
@@ -90,17 +76,24 @@ abstract class Expression : Symbol
         }
     }
 
-    public class Unary : Expression {
-        public Unary(Token op, Operand operand) {
+    public class Unary : Expression
+    {
+        public Unary(Token op, Operand operand)
+        {
             Operand = operand;
             Operator = op;
         }
+        // TODO rename this
+        public Operand Operand { get; set; }
+        public Token Operator { get; set; }
 
-        public override string GetName() {
+        public override string GetName()
+        {
             return "UNARY";
         }
 
-        public override int GetLine() {
+        public override int GetLine()
+        {
             return Operand.GetLine();
         }
 
@@ -109,30 +102,9 @@ abstract class Expression : Symbol
             return string.Format("(expr {0} {1})", Operator, Operand);
         }
 
-        Operand Operand { get; set; }
-        Token Operator { get; set; }
-
-        public override object Eval(Environment environment)
+        public override T Accept<T>(Visitor<T> visitor)
         {
-            // TODO UNARY
-            var first = Operand.Eval(environment);
-            if (Operator == null) {
-                return Operand.Eval(environment);
-            }
-
-            // TODO Sematically check available operations (string - string impossible)
-            // TODO abstract these operations (and maybe variable types)
-            switch (Operator.GetName())
-            {
-                case "PLUS":
-                    return (int) first;
-                case "MINUS":
-                    return -((int) first);
-                case "NOT":
-                    return !((bool) first);
-                default:
-                    throw new System.NotImplementedException(string.Format("UNARY {0} NOT IMPLEMENTED", Operator.GetName()));
-            }
+            return visitor.visitUnaryExpr(this);
         }
 
         public override string Type(Environment environment)
@@ -147,6 +119,62 @@ abstract class Expression : Symbol
             }
 
             return firstType;
+        }
+    }
+
+    public class Operand : Expression
+    {
+        public Operand(Symbol value)
+        {
+            Value = value;
+        }
+
+        public Symbol Value { get; }
+
+        public override string GetName()
+        {
+            return "OPERAND";
+        }
+
+        public override string ToString()
+        {
+            return string.Format("(opnd {0})", Value.ToString());
+        }
+
+        public override int GetLine()
+        {
+            return Value.GetLine();
+        }
+
+        public override T Accept<T>(Visitor<T> visitor)
+        {
+            return visitor.visitOperandExpr(this);
+        }
+
+        public override string Type(Environment environment)
+        {
+            switch (Value.GetName())
+            {
+                case "UNARY":
+                case "BINARY":
+                    return ((Expression)Value).Type(environment);
+                case "INTEGER":
+                    return "int";
+                case "STRING":
+                    return "string";
+                case "VAR_IDENTIFIER":
+                    var ident = (VarIdentifier)Value;
+
+                    if (!environment.Contains(ident.Name))
+                    {
+                        Console.WriteLine(string.Format("Cannot operate on uninitalized variable '{0}'", ident.Name));
+                        return null;
+                    }
+
+                    return environment.GetType(ident.Name);
+                default:
+                    return null;
+            }
         }
     }
 }

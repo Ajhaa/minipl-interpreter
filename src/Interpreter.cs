@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System;
-class Interpreter : Statement.Visitor<object>
+class Interpreter : Statement.Visitor<object>, Expression.Visitor<object>
 {
 
     public Interpreter(List<Statement> program, Environment environment)
@@ -20,14 +20,15 @@ class Interpreter : Statement.Visitor<object>
         }
     }
 
-    private void runtimeError(Symbol context, string template, params object[] args) {
+    private void runtimeError(Symbol context, string template, params object[] args)
+    {
         ErrorWriter.Write(context, template, args);
         throw new Exception();
     }
 
     public object visitPrintStmt(Statement.Print stmt)
     {
-        Console.Write(stmt.Content.Eval(environment).ToString());
+        Console.Write(stmt.Content.Accept(this).ToString());
         return null;
     }
 
@@ -73,13 +74,13 @@ class Interpreter : Statement.Visitor<object>
         {
             return null;
         }
-        environment.Assign(stmt.Identifier.Name, stmt.Initializer.Eval(environment));
+        environment.Assign(stmt.Identifier.Name, stmt.Initializer.Accept(this));
         return null;
     }
 
     public object visitAssignmentStmt(Statement.Assignment stmt)
     {
-        if (!environment.Assign(stmt.Identifier.Name, stmt.Value.Eval(environment)))
+        if (!environment.Assign(stmt.Identifier.Name, stmt.Value.Accept(this)))
         {
             // TODO is this even possible?
             runtimeError(stmt.Identifier, "Cannot assign to uninitialized variable {0}", stmt.Identifier.Name);
@@ -89,8 +90,8 @@ class Interpreter : Statement.Visitor<object>
 
     public object visitForStmt(Statement.For stmt)
     {
-        var counter = (int)stmt.RangeStart.Eval(environment);
-        var end = (int)stmt.RangeEnd.Eval(environment);
+        var counter = (int)stmt.RangeStart.Accept(this);
+        var end = (int)stmt.RangeEnd.Accept(this);
         while (counter <= end)
         {
             environment.Assign(stmt.Identifier.Name, counter);
@@ -105,10 +106,79 @@ class Interpreter : Statement.Visitor<object>
 
     public object visitAssertStmt(Statement.Assert stmt)
     {
-        if (!((bool) stmt.Expression.Eval(environment))) {
+        if (!((bool)stmt.Expression.Accept(this)))
+        {
             Console.WriteLine(string.Format("Line {0}: Assertion failed", stmt.GetLine()));
         }
 
         return null;
+    }
+
+    public object visitBinaryExpr(Expression.Binary expr)
+    {
+        var second = expr.Second.Accept(this);
+
+        var first = expr.First.Accept(this);
+
+        // TODO Sematically check available operations (string - string impossible)
+        // TODO abstract these operations (and maybe variable types)
+        switch (expr.Operator.GetName())
+        {
+            case "PLUS":
+                return ((int)first) + ((int)second);
+            case "MINUS":
+                return ((int)first) - ((int)second);
+            case "STAR":
+                return ((int)first) * ((int)second);
+            case "SLASH":
+                return ((int)first) / ((int)second);
+            case "AND":
+                return ((bool)first) && ((bool)second);
+            case "EQUAL":
+                return first.Equals(second);
+            default:
+                throw new System.NotImplementedException(string.Format("BINARY {0} NOT IMPLEMENTED", expr.Operator.GetName()));
+        }
+    }
+
+    public object visitUnaryExpr(Expression.Unary expr)
+    {
+        var first = expr.Operand.Accept(this);
+        if (expr.Operator == null)
+        {
+            return first;
+        }
+
+        // TODO Sematically check available operations (string - string impossible)
+        // TODO abstract these operations (and maybe variable types)
+        switch (expr.Operator.GetName())
+        {
+            case "PLUS":
+                return (int)first;
+            case "MINUS":
+                return -((int)first);
+            case "NOT":
+                return !((bool)first);
+            default:
+                throw new System.NotImplementedException(string.Format("UNARY {0} NOT IMPLEMENTED", expr.Operator.GetName()));
+        }
+    }
+
+    public object visitOperandExpr(Expression.Operand expr)
+    {
+        var value = expr.Value;
+        switch (value.GetName())
+        {
+            case "UNARY":
+            case "BINARY":
+                return ((Expression)value).Accept(this);
+            case "INTEGER":
+                return Int32.Parse(((Token)value).Value);
+            case "VAR_IDENTIFIER":
+                var ident = (VarIdentifier)value;
+                return environment.Get(ident.Name);
+            default:
+                return ((Token)value).Value;
+        }
     }
 }

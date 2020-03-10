@@ -212,22 +212,22 @@ class LLParser
         return new Expression.Unary(null, operand());
     }
 
-    private Operand operand()
+    private Expression.Operand operand()
     {
         current = advance();
         if (current.GetName() == "LEFT_PAREN")
         {
-            var opr = new Operand(expression());
+            var opr = new Expression.Operand(expression());
             match("RIGHT_PAREN");
             return opr;
         }
 
         if (current.GetName() == "IDENTIFIER")
         {
-            return new Operand(createIdent(current));
+            return new Expression.Operand(createIdent(current));
         }
 
-        return new Operand(current);
+        return new Expression.Operand(current);
     }
 
     private bool isOperator(Token t)
