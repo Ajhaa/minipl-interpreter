@@ -20,6 +20,7 @@ namespace minipl_interpreter
             //   Console.Write(token + " ");
             // }
             var program = new LLParser(tokens).Parse();
+            Console.WriteLine("PROGRAM:");
             foreach (var stmt in program) {
               Console.WriteLine(stmt);
             }

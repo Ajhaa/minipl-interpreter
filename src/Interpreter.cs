@@ -22,7 +22,7 @@ class Interpreter : Statement.Visitor<object>
 
     public object visitPrintStmt(Statement.Print stmt)
     {
-        Console.WriteLine(stmt.Content.Eval(environment).ToString());
+        Console.Write(stmt.Content.Eval(environment).ToString());
         return null;
     }
 
@@ -77,6 +77,19 @@ class Interpreter : Statement.Visitor<object>
         if (!environment.Assign(stmt.Identifier.Name, stmt.Value.Eval(environment)))
         {
             Console.WriteLine(string.Format("Cannot assign to uninitialized variable {0}", stmt.Identifier.Name));
+        }
+        return null;
+    }
+
+    public object visitForStmt(Statement.For stmt) {
+        var counter = (int) stmt.RangeStart.Eval(environment);
+        var end = (int) stmt.RangeEnd.Eval(environment);
+        while (counter <= end) {
+            environment.Assign(stmt.Identifier.Name, counter);
+            foreach (var statement in stmt.Block) {
+                statement.Accept(this);
+            }
+            counter++;
         }
         return null;
     }

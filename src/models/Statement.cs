@@ -1,4 +1,4 @@
-using System;
+using System.Collections.Generic;
 
 abstract class Statement : Symbol
 {
@@ -11,8 +11,8 @@ abstract class Statement : Symbol
         T visitPrintStmt(Print stmt);
         T visitReadStmt(Read stmt);
         T visitDeclarementStmt(Declarement stmt);
-
         T visitAssignmentStmt(Assignment stmt);
+        T visitForStmt(For stmt);
     }
 
     public class Print : Statement
@@ -113,6 +113,31 @@ abstract class Statement : Symbol
         public override string ToString()
         {
             return string.Format("(assign {0} {1})", Identifier, Value);
+        }
+    }
+
+    public class For : Statement 
+    {
+        public For(VarIdentifier identifier, Expression start, Expression end, List<Statement> block) {
+            Identifier = identifier;
+            RangeStart = start;
+            RangeEnd = end;
+            Block = block;
+        }
+
+        public override string GetName()
+        {
+            return "FOR";
+        }
+
+        public VarIdentifier Identifier { get; }
+        public Expression RangeStart { get; }
+        public Expression RangeEnd { get; }
+        public List<Statement> Block { get; }
+
+        public override T Accept<T>(Visitor<T> visitor)
+        {
+            return visitor.visitForStmt(this);
         }
     }
 }

@@ -19,7 +19,8 @@ class LLParser
     {
         while (index < tokens.Count)
         {
-            statement();
+            program.Add(statement());
+
         }
         return program;
     }
@@ -48,67 +49,85 @@ class LLParser
         return null;
     } 
 
-    private void statement() {
+    private Statement statement() {
         current = advance();
+        Statement stmt = null;
         switch (current.GetName()) {
             case "var":
-                varStatement();
+                stmt = varStatement();
                 break;
             case "IDENTIFIER":
-                assignStatement();
+                stmt = assignStatement();
                 break;
             case "for":
-                forStatement();
+                stmt = forStatement();
                 break;
             case "read":
-                readStatement();
+                stmt = readStatement();
                 break;
             case "print":
-                printStatement();
+                stmt = printStatement();
                 break;
             case "assert":
-                assertStatement();
+                stmt = assertStatement();
                 break;
             default:
                 throw new Exception(string.Format("Unexpected symbol {0}", current));
         }
         match("SEMICOLON");
+        return stmt;
     }
 
 
-    private void varStatement() {
+    private Statement varStatement() {
         var ident = new VarIdentifier(match("IDENTIFIER").Value);
         match("COLON");
         var type = advance();
         try {
             match("ASSIGN");
-            program.Add(new Statement.Declarement(ident, type.Value, expression()));
+            return new Statement.Declarement(ident, type.Value, expression());
         } catch {
-            program.Add(new Statement.Declarement(ident, type.Value, null));
+            return new Statement.Declarement(ident, type.Value, null);
         }
     }
 
-    private void assignStatement() {
+    private Statement assignStatement() {
         var ident = new VarIdentifier(current.Value);
         match("ASSIGN");
-        program.Add(new Statement.Assignment(ident, expression()));
+        return new Statement.Assignment(ident, expression());
     }
 
-    private void forStatement() {
-
-    }
-
-    private void readStatement() {
+    private Statement forStatement() {
         var ident = new VarIdentifier(match("IDENTIFIER").Value);
-        program.Add(new Statement.Read(ident));
+        match("in");
+        var rangeStart = expression();
+        match("RANGE");
+        var rangeEnd = expression();
+        match("do");
+        var block = new List<Statement>();
+        while (true) {
+            try {
+                match("end");
+                match("for");
+                return new Statement.For(ident, rangeStart, rangeEnd, block);
+            } catch {
+                block.Add(statement());
+            }
+        }
+
     }
 
-    private void printStatement() {
-        program.Add(new Statement.Print(expression()));
+    private Statement readStatement() {
+        var ident = new VarIdentifier(match("IDENTIFIER").Value);
+        return new Statement.Read(ident);
     }
 
-    private void assertStatement() {
+    private Statement printStatement() {
+        return new Statement.Print(expression());
+    }
 
+    private Statement assertStatement() {
+        return null;
     }
 
     private Expression expression() {
