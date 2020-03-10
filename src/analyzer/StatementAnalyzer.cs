@@ -1,14 +1,17 @@
 using System.Collections.Generic;
-using System;
-class Analyzer : Statement.Visitor<bool>
+
+class StatementAnalyzer : Statement.Visitor<bool>
 {
-    public Analyzer(List<Statement> program)
+    public StatementAnalyzer(List<Statement> program, ExpressionAnalyzer expressionAnalyzer, Environment environment)
     {
         this.program = program;
+        this.environment = environment;
+        this.expressionAnalyzer = expressionAnalyzer;
     }
-    private List<Statement> program;
 
+    private List<Statement> program;
     private Environment environment = new Environment();
+    private ExpressionAnalyzer expressionAnalyzer;
 
     public Environment Analyze()
     {
@@ -27,7 +30,7 @@ class Analyzer : Statement.Visitor<bool>
 
     public bool visitPrintStmt(Statement.Print stmt)
     {
-        return stmt.Content.Type(environment) != null;
+        return stmt.Content.Accept(expressionAnalyzer) != null;
     }
 
     public bool visitReadStmt(Statement.Read stmt)
@@ -62,7 +65,7 @@ class Analyzer : Statement.Visitor<bool>
             return valid;
         }
 
-        var initializerType = initializer.Type(environment);
+        var initializerType = initializer.Accept(expressionAnalyzer);
         if (initializerType == null)
         {
             valid = false;
@@ -88,7 +91,7 @@ class Analyzer : Statement.Visitor<bool>
 
         var variableType = environment.GetType(identifier.Name);
 
-        var initializerType = stmt.Value.Type(environment);
+        var initializerType = stmt.Value.Accept(expressionAnalyzer);
         if (initializerType == null)
         {
             return false;
@@ -121,13 +124,13 @@ class Analyzer : Statement.Visitor<bool>
             return false;
         }
 
-        var startType = stmt.RangeStart.Type(environment);
+        var startType = stmt.RangeStart.Accept(expressionAnalyzer);
         if (startType != "int")
         {
             ErrorWriter.Write(stmt.RangeStart, "Range start must be a number");
             return false;
         }
-        var endType = stmt.RangeEnd.Type(environment);
+        var endType = stmt.RangeEnd.Accept(expressionAnalyzer);
         if (endType != "int")
         {
             ErrorWriter.Write(stmt.RangeEnd, "Range end must be a number");
@@ -148,7 +151,7 @@ class Analyzer : Statement.Visitor<bool>
 
     public bool visitAssertStmt(Statement.Assert stmt)
     {
-        if (stmt.Expression.Type(environment) != "bool")
+        if (stmt.Expression.Accept(expressionAnalyzer) != "bool")
         {
             ErrorWriter.Write(stmt.Expression, "Cannot assert non-boolean expression");
             return false;

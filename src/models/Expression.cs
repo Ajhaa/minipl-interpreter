@@ -13,7 +13,6 @@ abstract class Expression : Symbol
         T visitUnaryExpr(Expression.Unary expr);
         T visitOperandExpr(Expression.Operand expr);
     }
-    public abstract string Type(Environment env);
 
     public class Binary : Expression
     {
@@ -44,35 +43,6 @@ abstract class Expression : Symbol
         public override T Accept<T>(Visitor<T> visitor)
         {
             return visitor.visitBinaryExpr(this);
-        }
-
-        public override string Type(Environment environment)
-        {
-            var firstType = First.Type(environment);
-            var secondType = Second.Type(environment);
-
-            if (firstType == null || secondType == null)
-            {
-                return null;
-            }
-
-            if (firstType != secondType)
-            {
-                Console.WriteLine(string.Format("Cannot operate with {0} and {1}", firstType, secondType));
-                return null;
-            }
-
-            // TODO use eval to get types?
-            if (
-                  (Operator.Type == TokenType.EQUAL ||
-                   Operator.Type == TokenType.AND ||
-                   Operator.Type == TokenType.NOT))
-            {
-
-                return "bool";
-            }
-
-            return First.Type(environment);
         }
     }
 
@@ -106,20 +76,6 @@ abstract class Expression : Symbol
         {
             return visitor.visitUnaryExpr(this);
         }
-
-        public override string Type(Environment environment)
-        {
-            var firstType = Operand.Type(environment);
-
-            // TODO use eval to get types?
-            if (Operator != null && Operator.Type == TokenType.NOT)
-            {
-
-                return "bool";
-            }
-
-            return firstType;
-        }
     }
 
     public class Operand : Expression
@@ -149,32 +105,6 @@ abstract class Expression : Symbol
         public override T Accept<T>(Visitor<T> visitor)
         {
             return visitor.visitOperandExpr(this);
-        }
-
-        public override string Type(Environment environment)
-        {
-            switch (Value.GetName())
-            {
-                case "UNARY":
-                case "BINARY":
-                    return ((Expression)Value).Type(environment);
-                case "INTEGER":
-                    return "int";
-                case "STRING":
-                    return "string";
-                case "VAR_IDENTIFIER":
-                    var ident = (VarIdentifier)Value;
-
-                    if (!environment.Contains(ident.Name))
-                    {
-                        Console.WriteLine(string.Format("Cannot operate on uninitalized variable '{0}'", ident.Name));
-                        return null;
-                    }
-
-                    return environment.GetType(ident.Name);
-                default:
-                    return null;
-            }
         }
     }
 }
