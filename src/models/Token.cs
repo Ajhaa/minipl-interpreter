@@ -21,6 +21,9 @@ class Token : Symbol
 
     public string GetName()
     {
+        if (Type == TokenType.KEYWORD) {
+            return Value;
+        }
         return Type.ToString();
     }
 

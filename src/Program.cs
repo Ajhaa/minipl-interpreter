@@ -19,13 +19,14 @@ namespace minipl_interpreter
             // {
             //   Console.Write(token + " ");
             // }
-            var program = new Parser(tokens).Parse();
-            // foreach (var stmt in program) {
-            //   Console.WriteLine(stmt);
-            // }
+            var program = new LLParser(tokens).Parse();
+            foreach (var stmt in program) {
+              Console.WriteLine(stmt);
+            }
             var environment = new Analyzer(program).Analyze();
             if (environment == null)
             {
+                Console.WriteLine("Exited with status code 1");
                 return 1;
             }
 
