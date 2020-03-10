@@ -1,6 +1,1 @@
-// this is a comment
-var number : int;
-
-print "input a number";
-read number;
-print number;
+print "foo\n";

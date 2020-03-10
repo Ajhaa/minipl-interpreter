@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using static TokenType;
+using System;
 class Scanner
 {
     public Scanner(string input)
@@ -178,16 +179,23 @@ class Scanner
     {
         index++;
         int stringStart = index;
+        string newString = "";
         while (input[index] != '"')
         {
+            if (input[index] == '\\' && input[index + 1] == 'n') {
+                newString += '\n';
+                index += 2;
+                continue;
+            }
             if (index >= input.Length)
             {
                 throw new System.Exception("UNTERMINATED STRING");
             }
+            newString += input[index];
             index++;
         }
 
-        addToken(new Token(STRING, input.Substring(stringStart, index - stringStart)));
+        addToken(new Token(STRING, newString));
     }
 
     private void makeInteger()
