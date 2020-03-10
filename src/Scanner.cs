@@ -37,37 +37,37 @@ class Scanner
         {
             // unambiguous single char tokens
             case ';':
-                addToken(new Token(SEMICOLON));
+                addToken(new Token(SEMICOLON, line));
                 return;
             case '+':
-                addToken(new Token(PLUS));
+                addToken(new Token(PLUS, line));
                 return;
             case '-':
-                addToken(new Token(MINUS));
+                addToken(new Token(MINUS, line));
                 return;
             case '*':
-                addToken(new Token(STAR));
+                addToken(new Token(STAR, line));
                 return;
             case '<':
-                addToken(new Token(LESS_THAN));
+                addToken(new Token(LESS_THAN, line));
                 return;
             case '>':
-                addToken(new Token(GREATER_THAN));
+                addToken(new Token(GREATER_THAN, line));
                 return;
             case '=':
-                addToken(new Token(EQUAL));
+                addToken(new Token(EQUAL, line));
                 return;
             case '&':
-                addToken(new Token(AND));
+                addToken(new Token(AND, line));
                 return;
             case '!':
-                addToken(new Token(NOT));
+                addToken(new Token(NOT, line));
                 return;
             case ')':
-                addToken(new Token(RIGHT_PAREN));
+                addToken(new Token(RIGHT_PAREN, line));
                 return;
             case '(':
-                addToken(new Token(LEFT_PAREN));
+                addToken(new Token(LEFT_PAREN, line));
                 return;
             // comment or slash
             case '/':
@@ -82,24 +82,24 @@ class Scanner
                     multiLineComment();
                     return;
                 }
-                addToken(new Token(SLASH));
+                addToken(new Token(SLASH, line));
                 return;
             // colon or assignment
             case ':':
                 if (lookahead() == '=')
                 {
                     index++;
-                    addToken(new Token(ASSIGN));
+                    addToken(new Token(ASSIGN, line));
                     return;
                 }
-                addToken(new Token(COLON));
+                addToken(new Token(COLON, line));
                 return;
             // range
             case '.':
                 if (lookahead() == '.')
                 {
                     index++;
-                    addToken(new Token(RANGE));
+                    addToken(new Token(RANGE, line));
                     return;
                 }
                 else
@@ -166,11 +166,11 @@ class Scanner
         var result = input.Substring(stringStart, index - stringStart + 1);
         if (Keywords.isKeyword(result))
         {
-            addToken(new Token(KEYWORD, result));
+            addToken(new Token(KEYWORD, result, line));
         }
         else
         {
-            addToken(new Token(IDENTIFIER, result));
+            addToken(new Token(IDENTIFIER, result, line));
         }
 
     }
@@ -195,7 +195,7 @@ class Scanner
             index++;
         }
 
-        addToken(new Token(STRING, newString));
+        addToken(new Token(STRING, newString, line));
     }
 
     private void makeInteger()
@@ -217,7 +217,7 @@ class Scanner
             index++;
         }
 
-        addToken(new Token(INTEGER, input.Substring(numberStart, index - numberStart + 1)));
+        addToken(new Token(INTEGER, input.Substring(numberStart, index - numberStart + 1), line));
     }
 
     private void lineComment()

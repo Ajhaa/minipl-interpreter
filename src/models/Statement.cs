@@ -3,7 +3,7 @@ using System.Collections.Generic;
 abstract class Statement : Symbol
 {
     public abstract string GetName();
-
+    public abstract int GetLine();
     public abstract T Accept<T>(Visitor<T> visitor);
 
     public interface Visitor<T>
@@ -28,6 +28,10 @@ abstract class Statement : Symbol
             return "PRINT";
         }
 
+        public override int GetLine() {
+            return Content.GetLine();
+        }
+
         public override string ToString()
         {
             return string.Format("(print {0})", Content);
@@ -49,6 +53,10 @@ abstract class Statement : Symbol
         public override string GetName()
         {
             return "READ";
+        }
+
+        public override int GetLine() {
+            return Target.GetLine();
         }
 
         public override string ToString()
@@ -79,6 +87,10 @@ abstract class Statement : Symbol
             return "DECLAREMENT";
         }
 
+        public override int GetLine() {
+            return Identifier.GetLine();
+        }
+
         public override T Accept<T>(Visitor<T> visitor)
         {
             return visitor.visitDeclarementStmt(this);
@@ -104,6 +116,10 @@ abstract class Statement : Symbol
         public override string GetName()
         {
             return "ASSIGNMENT";
+        }
+
+        public override int GetLine() {
+            return Identifier.GetLine();
         }
 
         public override T Accept<T>(Visitor<T> visitor)
@@ -132,6 +148,10 @@ abstract class Statement : Symbol
             return "FOR";
         }
 
+        public override int GetLine() {
+            return Identifier.GetLine();
+        }
+
         public VarIdentifier Identifier { get; }
         public Expression RangeStart { get; }
         public Expression RangeEnd { get; }
@@ -153,6 +173,10 @@ abstract class Statement : Symbol
         public override string GetName()
         {
             return "ASSERT";
+        }
+
+        public override int GetLine() {
+            return Expression.GetLine();
         }
         public Expression Expression { get; }
 

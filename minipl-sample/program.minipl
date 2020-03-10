@@ -1,1 +1,1 @@
-print "foo\n";
+var x : int := 1 print 1;

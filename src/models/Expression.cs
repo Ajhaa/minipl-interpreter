@@ -3,8 +3,10 @@ using System;
 abstract class Expression : Symbol
 {
     public abstract string GetName();
+    public abstract int GetLine();
     public abstract object Eval(Environment env);
     public abstract string Type(Environment env);
+
     public class Binary : Expression
     {
         public Binary(Operand first, Token op, Operand second)
@@ -19,6 +21,10 @@ abstract class Expression : Symbol
         public override string GetName()
         {
             return "BINARY";
+        }
+
+        public override int GetLine() {
+            return First.GetLine();
         }
 
         public override string ToString()
@@ -92,6 +98,10 @@ abstract class Expression : Symbol
 
         public override string GetName() {
             return "UNARY";
+        }
+
+        public override int GetLine() {
+            return Operand.GetLine();
         }
 
         public override string ToString()

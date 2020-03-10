@@ -8,23 +8,28 @@ enum TokenType
 class Token : Symbol
 {
 
-    public Token(TokenType type, string value)
+    public Token(TokenType type, string value, int line)
     {
         Type = type;
         Value = value;
+        this.line = line;
     }
 
-    public Token(TokenType type) : this(type, "") { }
+    public Token(TokenType type, int line) : this(type, "", line) { }
 
     public TokenType Type { get; }
     public string Value { get; }
-
+    private int line;
     public string GetName()
     {
         if (Type == TokenType.KEYWORD) {
             return Value;
         }
         return Type.ToString();
+    }
+
+    public int GetLine() {
+        return line;
     }
 
     public override string ToString()

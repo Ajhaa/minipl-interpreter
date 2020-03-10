@@ -14,45 +14,77 @@ class LLParser
 
     private int index = 0;
     private Token current;
+    private bool hadError = false;
 
     public List<Statement> Parse()
     {
         while (index < tokens.Count)
         {
-            program.Add(statement());
+            try
+            {
+                program.Add(statement());
+            }
+            catch
+            {
+                handleError();
+            }
 
         }
+        if (hadError) return null;
         return program;
     }
 
-    private Token advance() {
+    private Token advance()
+    {
         var current = tokens[index];
         index++;
         return current;
     }
 
-    private Token match(string name) {
+    private Token peek()
+    {
+        return tokens[index];
+    }
+
+    // If an error happens, forward until next statement is reached
+    private void handleError()
+    {
+        hadError = true;
+        while (index < tokens.Count && advance().GetName() != "SEMICOLON") ;
+    }
+
+    private void announceError(Token token, string template, params object[] args)
+    {
+        ErrorWriter.Write(current, template, args);
+        throw new Exception();
+    }
+
+    private Token match(string name)
+    {
         current = advance();
-        if (current.GetName() != name) {
-            index--;
-            throw new Exception(string.Format("Expected {1}, got {0}", current.GetName(), name));
+        if (current.GetName() != name)
+        {
+            announceError(current, "Expected {0}, got {1}", name, current.GetName());
         }
 
         return current;
     }
 
-    private Token lookahead() 
+    private Token lookahead()
     {
-        if (index + 1< tokens.Count) {
-            return tokens[index+1];
+        if (index + 1 < tokens.Count)
+        {
+            return tokens[index + 1];
         }
         return null;
-    } 
+    }
 
-    private Statement statement() {
+    private Statement statement()
+    {
         current = advance();
         Statement stmt = null;
-        switch (current.GetName()) {
+        switch (current.GetName())
+        {
             case "var":
                 stmt = varStatement();
                 break;
@@ -79,69 +111,90 @@ class LLParser
     }
 
 
-    private Statement varStatement() {
-        var ident = new VarIdentifier(match("IDENTIFIER").Value);
+    private Statement varStatement()
+    {
+        var ident = createIdent(match("IDENTIFIER"));
         match("COLON");
         var type = advance();
-        try {
-            match("ASSIGN");
+        if (!isType(type))
+        {
+            announceError(type, "Expected a type name, got '{0}'", type.Value);
+        }
+
+        if (peek().GetName() == "ASSIGN")
+        {
+            advance();
             return new Statement.Declarement(ident, type.Value, expression());
-        } catch {
+        }
+        else
+        {
             return new Statement.Declarement(ident, type.Value, null);
         }
     }
 
-    private Statement assignStatement() {
-        var ident = new VarIdentifier(current.Value);
+    private Statement assignStatement()
+    {
+        var ident = new VarIdentifier(current.Value, current.GetLine());
         match("ASSIGN");
         return new Statement.Assignment(ident, expression());
     }
 
-    private Statement forStatement() {
-        var ident = new VarIdentifier(match("IDENTIFIER").Value);
+    private Statement forStatement()
+    {
+        var ident = createIdent(match("IDENTIFIER"));
         match("in");
+
         var rangeStart = expression();
         match("RANGE");
+
         var rangeEnd = expression();
         match("do");
+
         var block = new List<Statement>();
-        while (true) {
-            try {
-                match("end");
+        while (true)
+        {
+            if (peek().GetName() == "end")
+            {
+                advance();
                 match("for");
                 return new Statement.For(ident, rangeStart, rangeEnd, block);
-            } catch {
-                block.Add(statement());
             }
+            block.Add(statement());
         }
 
     }
 
-    private Statement readStatement() {
-        var ident = new VarIdentifier(match("IDENTIFIER").Value);
+    private Statement readStatement()
+    {
+        var ident = createIdent(match("IDENTIFIER"));
         return new Statement.Read(ident);
     }
 
-    private Statement printStatement() {
+    private Statement printStatement()
+    {
         return new Statement.Print(expression());
     }
 
-    private Statement assertStatement() {
+    private Statement assertStatement()
+    {
         match("LEFT_PAREN");
         var assert = new Statement.Assert(expression());
         match("RIGHT_PAREN");
         return assert;
     }
 
-    private Expression expression() {
-        if (isOperator(lookahead())) {
+    private Expression expression()
+    {
+        if (isOperator(lookahead()))
+        {
             return binaryExpression();
         }
-        
+
         return unaryExpression();
     }
 
-    private Expression binaryExpression() {
+    private Expression binaryExpression()
+    {
         var left = operand();
         var operation = advance();
         var right = operand();
@@ -149,32 +202,48 @@ class LLParser
         return new Expression.Binary(left, operation, right);
     }
 
-    private Expression unaryExpression() {
+    private Expression unaryExpression()
+    {
         var next = lookahead();
-        if (isOperator(next)) {
+        if (isOperator(next))
+        {
             return new Expression.Unary(advance(), operand());
         }
         return new Expression.Unary(null, operand());
     }
 
-    private Operand operand() {
+    private Operand operand()
+    {
         current = advance();
-        if (current.GetName() == "LEFT_PAREN") {
+        if (current.GetName() == "LEFT_PAREN")
+        {
             var opr = new Operand(expression());
             match("RIGHT_PAREN");
             return opr;
         }
 
-        if (current.GetName() == "IDENTIFIER") {
-            return new Operand(new VarIdentifier(current.Value));
+        if (current.GetName() == "IDENTIFIER")
+        {
+            return new Operand(createIdent(current));
         }
 
         return new Operand(current);
     }
-    
+
     private bool isOperator(Token t)
     {
         var type = t.Type;
         return type == PLUS || type == MINUS || type == STAR || type == SLASH || type == AND || type == NOT || type == EQUAL;
+    }
+
+    private bool isType(Token t)
+    {
+        var value = t.Value;
+        return value == "int" || value == "string" || value == "bool";
+    }
+
+    private VarIdentifier createIdent(Token target)
+    {
+        return new VarIdentifier(current.Value, current.GetLine());
     }
 }
