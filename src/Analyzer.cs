@@ -111,26 +111,41 @@ class Analyzer : Statement.Visitor<bool>
             return false;
         }
 
-        if (environment.GetType(identifier.Name) != "int") {
+        if (environment.GetType(identifier.Name) != "int")
+        {
             Console.WriteLine(string.Format("Loop variable '{0}' must be of type 'int'", identifier.Name));
             return false;
         }
 
         var startType = stmt.RangeStart.Type(environment);
-        if (startType != "int") {
+        if (startType != "int")
+        {
             Console.WriteLine(string.Format("Range start must be a number"));
             return false;
         }
         var endType = stmt.RangeEnd.Type(environment);
-        if (endType != "int") {
+        if (endType != "int")
+        {
             Console.WriteLine(string.Format("Range end must be a number"));
             return false;
         }
         var valid = true;
-        foreach (var statement in stmt.Block) {
+        foreach (var statement in stmt.Block)
+        {
             valid = statement.Accept(this) && valid;
         }
 
         return valid;
+    }
+
+    public bool visitAssertStmt(Statement.Assert stmt)
+    {
+        if (stmt.Expression.Type(environment) != "bool")
+        {
+            Console.WriteLine(string.Format("Assertion must be a boolean"));
+            return false;
+        }
+
+        return true;
     }
 }

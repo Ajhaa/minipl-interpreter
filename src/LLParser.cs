@@ -127,7 +127,10 @@ class LLParser
     }
 
     private Statement assertStatement() {
-        return null;
+        match("LEFT_PAREN");
+        var assert = new Statement.Assert(expression());
+        match("RIGHT_PAREN");
+        return assert;
     }
 
     private Expression expression() {

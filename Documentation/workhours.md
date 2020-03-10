@@ -7,4 +7,5 @@
 |26.1|1|Played around with signed numbers|
 |30.1|6|Started working on parser: binary expressions with paretheses, print statement, variable declaration|
 |5.3|7| Improved parser: variables in expression, read statement. Started working on interpreter and sematic analysis|
-|total|19||
+|10.3|2.5| Rewrote the parser as LL, implemented for loop|
+|total|21.5||

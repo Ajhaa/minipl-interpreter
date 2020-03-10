@@ -81,12 +81,15 @@ class Interpreter : Statement.Visitor<object>
         return null;
     }
 
-    public object visitForStmt(Statement.For stmt) {
-        var counter = (int) stmt.RangeStart.Eval(environment);
-        var end = (int) stmt.RangeEnd.Eval(environment);
-        while (counter <= end) {
+    public object visitForStmt(Statement.For stmt)
+    {
+        var counter = (int)stmt.RangeStart.Eval(environment);
+        var end = (int)stmt.RangeEnd.Eval(environment);
+        while (counter <= end)
+        {
             environment.Assign(stmt.Identifier.Name, counter);
-            foreach (var statement in stmt.Block) {
+            foreach (var statement in stmt.Block)
+            {
                 statement.Accept(this);
             }
             counter++;
@@ -94,4 +97,12 @@ class Interpreter : Statement.Visitor<object>
         return null;
     }
 
+    public object visitAssertStmt(Statement.Assert stmt)
+    {
+        if (!((bool) stmt.Expression.Eval(environment))) {
+            Console.WriteLine("Assertion failed");
+        }
+
+        return null;
+    }
 }

@@ -13,6 +13,7 @@ abstract class Statement : Symbol
         T visitDeclarementStmt(Declarement stmt);
         T visitAssignmentStmt(Assignment stmt);
         T visitForStmt(For stmt);
+        T visitAssertStmt(Assert stmt);
     }
 
     public class Print : Statement
@@ -116,9 +117,10 @@ abstract class Statement : Symbol
         }
     }
 
-    public class For : Statement 
+    public class For : Statement
     {
-        public For(VarIdentifier identifier, Expression start, Expression end, List<Statement> block) {
+        public For(VarIdentifier identifier, Expression start, Expression end, List<Statement> block)
+        {
             Identifier = identifier;
             RangeStart = start;
             RangeEnd = end;
@@ -138,6 +140,25 @@ abstract class Statement : Symbol
         public override T Accept<T>(Visitor<T> visitor)
         {
             return visitor.visitForStmt(this);
+        }
+    }
+
+    public class Assert : Statement
+    {
+        public Assert(Expression expr)
+        {
+            Expression = expr;
+        }
+
+        public override string GetName()
+        {
+            return "ASSERT";
+        }
+        public Expression Expression { get; }
+
+        public override T Accept<T>(Visitor<T> visitor)
+        {
+            return visitor.visitAssertStmt(this);
         }
     }
 }
