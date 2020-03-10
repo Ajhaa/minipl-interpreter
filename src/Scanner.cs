@@ -25,6 +25,11 @@ class Scanner
         return tokens;
     }
 
+    private void error(string template, params object[] args) {
+        ErrorWriter.Write(line, template, args);
+        throw new Exception();
+    }
+
     private void addToken(Token t)
     {
         tokens.Add(t);
@@ -126,7 +131,8 @@ class Scanner
                     makeInteger();
                     return;
                 }
-                throw new System.Exception("PANIC");
+                error("Invalid symbol {0}", current);
+                return;
         }
     }
 
@@ -187,12 +193,15 @@ class Scanner
                 index += 2;
                 continue;
             }
-            if (index >= input.Length)
-            {
-                throw new System.Exception("UNTERMINATED STRING");
-            }
+
             newString += input[index];
             index++;
+
+            if (index >= input.Length)
+            {
+                error("Unterminated string");
+            }
+
         }
 
         addToken(new Token(STRING, newString, line));
@@ -207,7 +216,7 @@ class Scanner
             var next = lookahead();
             if (isLetter(next))
             {
-                throw new System.Exception("Unexpected char while parsing integer literal");
+                error("Unexpected character '{0}' while parsing integer literal", next);
             }
 
             if (!isNumber(next))

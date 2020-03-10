@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
 
 namespace minipl_interpreter
 {
@@ -13,7 +14,13 @@ namespace minipl_interpreter
                 return 1;
             }
             var fileAsString = File.ReadAllText(args[0]);
-            var tokens = new Scanner(fileAsString).Tokenize();
+            List<Token> tokens = null;
+            try {
+                tokens = new Scanner(fileAsString).Tokenize();
+            } catch {
+                Console.WriteLine("Exited with status code 1");
+                return 1;
+            }
 
             // foreach (var token in tokens)
             // {
@@ -35,8 +42,12 @@ namespace minipl_interpreter
 
 
 
-
-            new Interpreter(program, environment).Interpret();
+            try {
+                new Interpreter(program, environment).Interpret();
+            } catch {
+                Console.WriteLine("Exited with status code 1");
+                return 1;
+            }
             return 0;
         }
     }

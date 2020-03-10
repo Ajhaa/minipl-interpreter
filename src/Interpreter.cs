@@ -20,6 +20,11 @@ class Interpreter : Statement.Visitor<object>
         }
     }
 
+    private void runtimeError(Symbol context, string template, params object[] args) {
+        ErrorWriter.Write(context, template, args);
+        throw new Exception();
+    }
+
     public object visitPrintStmt(Statement.Print stmt)
     {
         Console.Write(stmt.Content.Eval(environment).ToString());
@@ -41,7 +46,7 @@ class Interpreter : Statement.Visitor<object>
                 }
                 catch
                 {
-                    Console.WriteLine("Could not parse to int");
+                    runtimeError(target, "Could not parse to int");
                 }
                 break;
             case "bool":
@@ -51,7 +56,7 @@ class Interpreter : Statement.Visitor<object>
                 }
                 catch
                 {
-                    Console.WriteLine("Could not parse to bool");
+                    runtimeError(target, "Could not parse to bool");
                 }
                 break;
             default:
@@ -76,7 +81,8 @@ class Interpreter : Statement.Visitor<object>
     {
         if (!environment.Assign(stmt.Identifier.Name, stmt.Value.Eval(environment)))
         {
-            Console.WriteLine(string.Format("Cannot assign to uninitialized variable {0}", stmt.Identifier.Name));
+            // TODO is this even possible?
+            runtimeError(stmt.Identifier, "Cannot assign to uninitialized variable {0}", stmt.Identifier.Name);
         }
         return null;
     }
@@ -100,7 +106,7 @@ class Interpreter : Statement.Visitor<object>
     public object visitAssertStmt(Statement.Assert stmt)
     {
         if (!((bool) stmt.Expression.Eval(environment))) {
-            Console.WriteLine("Assertion failed");
+            Console.WriteLine(string.Format("Line {0}: Assertion failed", stmt.GetLine()));
         }
 
         return null;

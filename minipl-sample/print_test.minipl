@@ -1,3 +1,9 @@
-var Y : bool := 123;
+var Y : string := "asd";
+var X : int := 3;
 
+for X in 1..10 do
+    print X;
+    print "\n";
+end for;
 print Y;
+assert (X = 134);
