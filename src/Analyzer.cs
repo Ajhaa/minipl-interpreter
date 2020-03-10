@@ -98,6 +98,10 @@ class Analyzer : Statement.Visitor<bool>
             Console.WriteLine(string.Format("Cannot assign value of type {2} to variable {0} of type {1}", identifier.Name, variableType, initializerType));
             return false;
         }
+        if (environment.isLocked(identifier.Name)) {
+            Console.WriteLine(string.Format("Cannot reassign loop variable {0} during loop", identifier.Name));
+            return false;
+        }
 
         return true;
     }
@@ -130,10 +134,14 @@ class Analyzer : Statement.Visitor<bool>
             return false;
         }
         var valid = true;
+
+        // lock the variable so it can't be modified during the loop
+        environment.setLock(identifier.Name, true);
         foreach (var statement in stmt.Block)
         {
             valid = statement.Accept(this) && valid;
         }
+        environment.setLock(identifier.Name, false);
 
         return valid;
     }

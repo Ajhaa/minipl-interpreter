@@ -32,5 +32,13 @@ class Environment {
 
     public bool Contains(string ident) {
         return environment.ContainsKey(ident);
+    }
+
+    public void setLock(string ident, bool state) {
+        environment[ident].Locked = state;
+    }
+
+    public bool isLocked(string ident) {
+        return environment[ident].Locked;
     } 
 }
