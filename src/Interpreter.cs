@@ -125,6 +125,9 @@ class Interpreter : Statement.Visitor<object>, Expression.Visitor<object>
         switch (expr.Operator.GetName())
         {
             case "PLUS":
+                if (first is string) {
+                    return first.ToString() + second.ToString();
+                }
                 return ((int)first) + ((int)second);
             case "MINUS":
                 return ((int)first) - ((int)second);

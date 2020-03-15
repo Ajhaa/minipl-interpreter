@@ -1,1 +1,5 @@
-var x : int := 1 print 1;
+/*
+ this is a comment
+*/
+
+print 1 + 1;

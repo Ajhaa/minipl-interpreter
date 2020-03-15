@@ -239,6 +239,13 @@ class Scanner
 
     private void multiLineComment()
     {
-        throw new System.NotImplementedException();
+        while (true) {
+            index++;
+
+            if (input[index] == '*' && input[index + 1] == '/') {
+                index++;
+                break;
+            }
+        }
     }
 }

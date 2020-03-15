@@ -18,7 +18,7 @@ namespace minipl_interpreter
             try {
                 tokens = new Scanner(fileAsString).Tokenize();
             } catch {
-                Console.WriteLine("Exited with status code 1");
+                Console.WriteLine("Scanner exited with status code 1");
                 return 1;
             }
 
@@ -28,13 +28,13 @@ namespace minipl_interpreter
             // }
             var program = new LLParser(tokens).Parse();
             if (program == null) {
-                Console.WriteLine("Exited with status code 1");
+                Console.WriteLine("Parser exited with status code 1");
                 return 1;
             }
             var environment = new Analyzer(program).Analyze();
             if (environment == null)
             {
-                Console.WriteLine("Exited with status code 1");
+                Console.WriteLine("Analyzer with status code 1");
                 return 1;
             }
 
@@ -45,7 +45,7 @@ namespace minipl_interpreter
             try {
                 new Interpreter(program, environment).Interpret();
             } catch {
-                Console.WriteLine("Exited with status code 1");
+                Console.WriteLine("Interpreter exited with status code 1");
                 return 1;
             }
             return 0;
