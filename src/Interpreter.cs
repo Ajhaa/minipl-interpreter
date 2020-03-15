@@ -70,11 +70,24 @@ class Interpreter : Statement.Visitor<object>, Expression.Visitor<object>
 
     public object visitDeclarementStmt(Statement.Declarement stmt)
     {
+        object value = null;
         if (stmt.Initializer == null)
         {
-            return null;
+            switch (environment.GetType(stmt.Identifier.Name)) {
+                case "int":
+                    value = 0;
+                    break;
+                case "string":
+                    value = "";
+                    break;
+                case "bool":
+                    value = false;
+                    break;
+            }
+        } else {
+            value = stmt.Initializer.Accept(this);
         }
-        environment.Assign(stmt.Identifier.Name, stmt.Initializer.Accept(this));
+        environment.Assign(stmt.Identifier.Name, value);
         return null;
     }
 

@@ -44,8 +44,8 @@ namespace minipl_interpreter
 
             try {
                 new Interpreter(program, environment).Interpret();
-            } catch {
-                Console.WriteLine("Interpreter exited with status code 1");
+            } catch (Exception e){
+                Console.WriteLine("Interpreter exited with status code 1" + e);
                 return 1;
             }
             return 0;
